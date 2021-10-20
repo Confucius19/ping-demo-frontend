@@ -3,6 +3,7 @@ import React from "react";
 import "./App.css";
 import PingConfiguration from "./components/ping_config";
 import PingLog from "./components/ping_log";
+import MagnitudeIndicator from "./components/magnitude_indicator";
 
 const dummy_pingbursts = [
   {
@@ -56,8 +57,15 @@ export default class App extends React.Component {
   }
 
   render() {
+    const right_pane_style = {
+      backgroundColor: "var(--bg1)",
+      width: 660,
+      marginRight: 35,
+      marginTop: 100,
+      marginLeft: "auto",
+    };
     return (
-      <div>
+      <div style={right_pane_style}>
         <PingConfiguration />
         <PingLog pingbursts={this.state.pingbursts} />
       </div>

@@ -1,10 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,500;0,600;1,500&display=swap');
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font: 18px Raleway, sans-serif;
+  font-weight: 500;
+  /* font-style: ; */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg0);
+  color: white;
+  box-sizing: border-box;
 }
 
 code {
@@ -65,6 +70,7 @@ code {
   --bg2 : var(--gruvbox-dark2);
   --bg3 : var(--gruvbox-dark3);
   --bg4 : var(--gruvbox-dark4);
+  --fg0 : var(--gruvbox-lightl0);
   --red : var(--gruvbox-light-red);
   --green: var(--gruvbox-light-green);
   --yellow: var(--gruvbox-light-yellow);

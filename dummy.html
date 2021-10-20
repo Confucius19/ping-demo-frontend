@@ -1,0 +1,66 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="./index.css">
+</head>
+
+<body>
+  <div class="top_vstack">
+    <h1 class='dash_title'>Your Wi-SUN Network</h1>
+    <div class="pane_container">
+      <div class="pane">
+        <div class="tile_container_full">
+          <h2 class="tile_header">Topology</h2>
+          <div class="tile"></div>
+        </div>
+        <div class="tile_container_full">
+          <h2 class="tile_header">IP Addresses</h2>
+          <div class="tile"></div>
+        </div>
+      </div>
+      <div class="pane">
+        <div class="tile_container_full tile_hstack">
+          <div class="tile_container_half">
+            <h2 class="tile_header">Ping Config</h2>
+            <div class="tile">
+              <div class="ping_form_container">
+                <label class="slider_label" for='packet_size' style='margin-top:25px'>Packet Size</label>
+                <div class="slider_container">
+                  <input class="slider" type="range" name="tbd" id="packet_size" min="1" max="100" value="50" />
+                  <input class="slider_input" type="text" name="" id="" spellcheck="false" value="250" />
+                </div>
+                <label class="slider_label" for='Timeout'>Timeout</label>
+                <div class="slider_container">
+                  <input class="slider" type="range" name="tbd" id="Timeout" min="1" max="100" value="50">
+                  <input class="slider_input" type="text" name="" id="" spellcheck="false" value="250" />
+                </div>
+                <label class="slider_label" for='Interval'>Interval</label>
+                <div class="slider_container">
+                  <input class="slider" type="range" name="tbd" id="Interval" min="1" max="100" value="50">
+                  <input class="slider_input" type="text" name="" id="" spellcheck="false" value="250" />
+                </div>
+                <label class="slider_label" for='tbc'>Number of Packets</label>
+                <div class="slider_container">
+                  <input class="slider" type="range" name="tbd" id="" min="1" max="100" value="50">
+                  <input class="slider_input" type="text" name="" id="" spellcheck="false" value="250" />
+                </div>
+                <button type="button" class="blue_button ping_submit">Submit</button>
+              </div>
+            </div>
+          </div>
+          <div class="tile_container_half">
+            <h2 class="tile_header">At A Glance</h2>
+            <div class="tile"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>
