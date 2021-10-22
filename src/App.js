@@ -1,40 +1,13 @@
-// import logo from './logo.svg';
 import React from "react";
 import "./App.css";
-import PingConfiguration from "./components/ping_config";
-import PingLog from "./components/ping_log";
-import MagnitudeIndicator from "./components/magnitude_indicator";
-
-const dummy_pingbursts = [
-  {
-    id: 53,
-    num_packets_requested: 10,
-    records: [
-      {
-        source: "2020::A",
-        destination: "2020::C",
-        start: "Tue Aug 19 1975 23:15:30 GMT+0200",
-        duration: 234,
-        packet_size: 56,
-        was_success: true,
-      },
-    ],
-  },
-  {
-    id: 57,
-    num_packets_requested: 10,
-    records: [
-      {
-        source: "2020::B",
-        destination: "2020::C",
-        start: "Tue Aug 19 1975 23:15:30 GMT+0200",
-        duration: 234,
-        packet_size: 56,
-        was_success: true,
-      },
-    ],
-  },
-];
+import app_fonts from "./AppFonts.js";
+import ColorScheme from "./ColorScheme";
+import Pane from "./components/Pane";
+import Tile from "./components/Tile";
+import PingConfig from "./components/PingConfig";
+import AtAGlance from "./components/AtAGlance";
+import Monitor from "./components/Monitor";
+import Scrollbars from "react-custom-scrollbars";
 
 export default class App extends React.Component {
   constructor(props) {
@@ -42,56 +15,62 @@ export default class App extends React.Component {
     this.state = {
       pingbursts: [],
     };
+    let body = document.getElementsByTagName("body")[0];
+    body.style.backgroundColor = ColorScheme.get_color("bg0");
+    body.style.boxSizing = "border-box";
+    body.style.margin = "0";
+    for (const key in app_fonts) {
+      body.style[key] = app_fonts[key];
+    }
 
-    setInterval(async () => {
-      let request_opts = {
-        method: "GET",
-        mode: "cors",
-      };
-      const res = await fetch("pingbursts", request_opts);
-      // const body = JSON.parse(res.body);
-      const pingbursts = await res.json();
-      this.setState({ pingbursts });
-      console.log(pingbursts);
-    }, 5000);
+    //update pingbursts func
+    // setInterval(async () => {
+    //   let request_opts = {
+    //     method: "GET",
+    //     mode: "cors",
+    //   };
+    //   const res = await fetch("pingbursts", request_opts);
+    //   // const body = JSON.parse(res.body);
+    //   const pingbursts = await res.json();
+    //   this.setState({ pingbursts });
+    //   console.log(pingbursts);
+    // }, 5000);
   }
 
   render() {
-    const right_pane_style = {
-      backgroundColor: "var(--bg1)",
-      width: 660,
-      marginRight: 35,
-      marginTop: 100,
-      marginLeft: "auto",
-    };
     return (
-      <div style={right_pane_style}>
-        <PingConfiguration />
-        <PingLog pingbursts={this.state.pingbursts} />
-      </div>
+      <Scrollbars style={{ height: "100vh", width: "100vw" }}>
+        <div className="top_vstack">
+          <h1 className="dash_title">Your Wi-SUN Network</h1>
+          <div className="pane_container">
+            <Pane>
+              <div className="tile_container_full tile_container_common">
+                <Tile title="Topology"></Tile>
+              </div>
+              <div className="tile_container_full tile_container_common">
+                <Tile title="IP Addresses"></Tile>
+              </div>
+            </Pane>
+            <Pane>
+              <div className="tile_container_hstack tile_container_common">
+                <div className="tile_container_half">
+                  <Tile title="Ping Config">
+                    <PingConfig />
+                  </Tile>
+                </div>
+                <div className="tile_container_half">
+                  <Tile title="At A Glance">
+                    <AtAGlance />
+                  </Tile>
+                </div>
+              </div>
+              <div className="tile_container_full tile_container_common">
+                <Monitor />
+              </div>
+            </Pane>
+          </div>
+        </div>
+      </Scrollbars>
     );
   }
 }
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
-
-// export default App;

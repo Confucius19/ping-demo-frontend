@@ -1,0 +1,30 @@
+.flex_table{
+  display: block;
+  border-radius : 9px;
+}
+
+.flex_table_row{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--row_height);
+  /* width: calc(100% - 20px) */
+}
+
+.flex_table_datum:last-child{
+  margin-right: 20px;
+}
+
+.flex_table_header_row{
+  border-top-left-radius: 9px;
+  border-top-right-radius: 9px;
+}
+
+.flex_table_datum{
+text-align: center;  
+display: flex;
+flex-direction: row;
+justify-content: center;
+flex-basis: 0;
+font-weight: 500;
+}

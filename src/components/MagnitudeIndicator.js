@@ -1,24 +1,24 @@
 import React from "react";
+import ColorScheme from "../ColorScheme";
 
 export default class MagnitudeIndicator extends React.Component {
   render() {
     //
     // this.props.thresholds
     const thresholds = {
-      0.3: "var(--aqua)",
-      0.6: "var(--yellow)",
-      0.9: "var(--red)",
+      0.3: ColorScheme.get_color("green"),
+      0.6: ColorScheme.get_color("yellow"),
+      0.9: ColorScheme.get_color("red"),
     };
 
     const borderRadius = 9;
     const height = 21;
-    const width = 124;
 
     const background_style = {
-      backgroundColor: "var(--bg1)",
+      backgroundColor: ColorScheme.get_color("bg1"),
       borderRadius,
       height,
-      width,
+      width: "80%",
     };
 
     const value = this.props.value;

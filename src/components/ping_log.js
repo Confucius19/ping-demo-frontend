@@ -1,7 +1,7 @@
 import React from "react";
 import toggle_down from "../assets/toggle_down.svg";
 import toggle_right from "../assets/toggle_right.svg";
-import MagnitudeIndicator from "./magnitude_indicator";
+import MagnitudeIndicator from "./MagnitudeIndicator";
 import "../assets/ping_config.css";
 
 function PingRow(props) {
