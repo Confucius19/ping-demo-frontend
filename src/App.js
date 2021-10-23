@@ -10,16 +10,47 @@ import Monitor from "./components/Monitor";
 import Scrollbars from "react-custom-scrollbars";
 import IPAddressTable from "./components/IPAddressTable";
 import Topology from "./components/Topology";
+import produce from "immer";
 
-const dummy_cytoscape_elements = {
-  nodes: [{ id: "a" }, { id: "b" }],
-  edges: [{ id: "ab", source: "a", target: "b" }],
-};
+function nickname_generator() {
+  const nicknames = [
+    "Alfa",
+    "Bravo",
+    "Charlie",
+    "Delta",
+    "Echo",
+    "Foxtrot",
+    "Golf",
+    "Hotel",
+    "India",
+    "Juliett",
+    "Kilo",
+    "Lima",
+    "Mike",
+    "November",
+    "Oscar",
+    "Papa",
+    "Quebec",
+    "Romeo",
+    "Sierra",
+    "Tango",
+    "Uniform",
+    "Victor",
+    "Whiskey",
+    "X-ray",
+    "Yankee",
+    "Zulu",
+  ];
+  const index = Math.floor(Math.random() * nicknames.length);
+  return nicknames[index];
+}
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      topology: { nodes: [], edges: [] },
+      ip_address_info_array: [],
       pingbursts: [],
     };
     let body = document.getElementsByTagName("body")[0];
@@ -31,18 +62,62 @@ export default class App extends React.Component {
     }
 
     //update pingbursts func
-    // setInterval(async () => {
-    //   let request_opts = {
-    //     method: "GET",
-    //     mode: "cors",
-    //   };
-    //   const res = await fetch("pingbursts", request_opts);
-    //   // const body = JSON.parse(res.body);
-    //   const pingbursts = await res.json();
-    //   this.setState({ pingbursts });
-    //   console.log(pingbursts);
-    // }, 5000);
+    setTimeout(async () => {
+      let request_opts = {
+        method: "GET",
+        mode: "cors",
+      };
+      const pingburst_res = await fetch("pingbursts", request_opts);
+      const pingbursts = await pingburst_res.json();
+      const topology_res = await fetch("topology", request_opts);
+      const topology = await topology_res.json();
+      this.setState((state) => {
+        return produce(state, (draft) => {
+          //find diff of ip_addresses
+          function calc_diff_ips(old_topology, new_topology) {
+            const old_ips = old_topology.nodes.reduce(
+              (ip_set, node) => ip_set.add(node.data.id),
+              new Set()
+            );
+            const difference = [];
+            for (const node of new_topology.nodes) {
+              const current_ip = node.data.id;
+              if (!old_ips.has(current_ip)) {
+                difference.push(current_ip);
+              }
+            }
+            return difference;
+          }
+          const diff_ips = calc_diff_ips(draft.topology, topology);
+          //Add new entries to ip_address_info_array
+          const diff_ip_address_info_array = diff_ips.map((ip_address) => {
+            const nickname = nickname_generator();
+            return {
+              is_selected: false,
+              ip_address,
+              nickname,
+              is_connected: true,
+            };
+          });
+          draft.ip_address_info_array.push(...diff_ip_address_info_array);
+          draft.topology = topology;
+          draft.pingbursts = pingbursts;
+        });
+      });
+      console.log(this.state, topology);
+    }, 0);
   }
+
+  ip_selection_handler = (ip, is_selected) => {
+    this.setState((state) =>
+      produce(state, (draft) => {
+        const ip_address_info = draft.ip_address_info_array.find(
+          (info) => info.ip_address === ip
+        );
+        ip_address_info.is_selected = is_selected;
+      })
+    );
+  };
 
   render() {
     return (
@@ -53,12 +128,19 @@ export default class App extends React.Component {
             <Pane>
               <div className="tile_container_full tile_container_common">
                 <Tile title="Topology">
-                  <Topology elements={dummy_cytoscape_elements} />
+                  <Topology
+                    ip_selection_handler={this.ip_selection_handler}
+                    ip_address_info_array={this.state.ip_address_info_array}
+                    elements={this.state.topology}
+                  />
                 </Tile>
               </div>
               <div className="tile_container_full tile_container_common">
                 <h2 className="tile_header">IP Addresses</h2>
-                <IPAddressTable />
+                <IPAddressTable
+                  ip_selection_handler={this.ip_selection_handler}
+                  ip_address_info_array={this.state.ip_address_info_array}
+                />
               </div>
             </Pane>
             <Pane>

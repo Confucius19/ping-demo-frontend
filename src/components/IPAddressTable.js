@@ -8,34 +8,42 @@ import StatusIndicator from "./StatusIndicator";
 const row_height = 45;
 const divider_height = 2;
 
-const example_ip_address_info_array = [
-  {
-    ip_address: "aaaa",
-    nickname: "alpha",
-    is_connected: false,
-  },
-  {
-    ip_address: "bbbb",
-    nickname: "beta",
-    is_connected: true,
-  },
-  {
-    ip_address: "cccc",
-    nickname: "gamma",
-    is_connected: false,
-  },
-];
+// const example_ip_address_info_array = [
+//   {
+//     ip_address: "aaaa",
+//     nickname: "alpha",
+//     is_connected: false,
+//     is_selected: false,
+//   },
+//   {
+//     ip_address: "bbbb",
+//     nickname: "beta",
+//     is_connected: true,
+//     is_selected: true,
+//   },
+//   {
+//     ip_address: "cccc",
+//     nickname: "gamma",
+//     is_connected: false,
+//     is_selected: true,
+//   },
+// ];
 
-function getIPAddressInfoByIPs(ip_addresses) {
-  return ip_addresses.map((ip_address) =>
-    example_ip_address_info_array.find((ele) => ele.ip_address === ip_address)
-  );
-}
+// function getIPAddressInfoByIPs(ip_addresses) {
+//   return ip_addresses.map((ip_address) =>
+//     example_ip_address_info_array.find((ele) => ele.ip_address === ip_address)
+//   );
+// }
 
 class IPAddressRow extends React.Component {
   render() {
     return this.props.genRow([
-      <CheckBox is_checked={true} />,
+      <CheckBox
+        click_handler={(newVal) =>
+          this.props.ip_selection_handler(this.props.ip_address, newVal)
+        }
+        is_checked={this.props.is_selected}
+      />,
       this.props.ip_address,
       this.props.nickname,
       <StatusIndicator is_good_status={this.props.is_connected} />,
@@ -117,29 +125,18 @@ export default class IPAddressTable extends React.Component {
       );
     };
 
-    const ip_address_info_array = getIPAddressInfoByIPs([
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "aaaa",
-      "bbbb",
-      "cccc",
-    ]);
-    const table_rows = ip_address_info_array.map((ip_address_info) => {
-      return (
-        <IPAddressRow
-          key={ip_address_info.ip_address}
-          {...ip_address_info}
-          genRow={generateBodyRow}
-        />
-      );
-    });
+    const table_rows = this.props.ip_address_info_array.map(
+      (ip_address_info) => {
+        return (
+          <IPAddressRow
+            key={ip_address_info.ip_address}
+            {...ip_address_info}
+            ip_selection_handler={this.props.ip_selection_handler}
+            genRow={generateBodyRow}
+          />
+        );
+      }
+    );
     const scrollbar_style = {
       width: "100%",
       height: 8 * (row_height + divider_height),
