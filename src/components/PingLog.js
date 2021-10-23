@@ -1,8 +1,9 @@
 import React from "react";
 import ColorScheme from "../ColorScheme";
-import "../assets/PingLog.css";
+import "../assets/FlexTable.css";
 import toggle_icon from "../icons/toggle_icon.svg";
 import MagnitudeIndicator from "./MagnitudeIndicator";
+import StatusIndicator from "./StatusIndicator";
 import { Scrollbars } from "react-custom-scrollbars";
 
 const row_height = 45;
@@ -49,7 +50,7 @@ function PingRow(props) {
     `n = ${props.index + 1}`,
     props.start,
     props.duration,
-    props.was_success,
+    <StatusIndicator is_good_status={props.was_success} />,
   ];
 
   return props.genRow(ping_cols);
@@ -92,7 +93,6 @@ class PingBurstRow extends React.Component {
     const error_rate =
       records.reduce((acc, record) => acc + (record.was_success ? 0 : 1), 0) /
       records.length;
-    console.log(error_rate);
     const error_rate_indicator = <MagnitudeIndicator value={error_rate} />;
     const ping_rows = records.map((record, index) => (
       <PingRow
@@ -226,7 +226,10 @@ export default class PingLog extends React.Component {
         />
       );
     });
-
+    const scrollbar_style = {
+      width: "100%",
+      height: 8 * (row_height + divider_height),
+    };
     return (
       <div style={main_table_style} className="flex_table">
         <div
@@ -235,9 +238,7 @@ export default class PingLog extends React.Component {
         >
           {this.table_headers}
         </div>
-        <Scrollbars
-          style={{ width: "100%", height: 8 * (row_height + divider_height) }}
-        >
+        <Scrollbars style={scrollbar_style}>
           <div className="flex_table_body">{table_rows}</div>
         </Scrollbars>
       </div>

@@ -47,7 +47,7 @@ const color_scheme = {
   bg2: gruvbox_colors["gruvbox-dark2"],
   bg3: gruvbox_colors["gruvbox-dark3"],
   bg4: gruvbox_colors["gruvbox-dark4"],
-  fg0: gruvbox_colors["gruvbox-lightl0"],
+  fg0: gruvbox_colors["gruvbox-light0"],
   red: gruvbox_colors["gruvbox-light-red"],
   green: gruvbox_colors["gruvbox-light-green"],
   yellow: gruvbox_colors["gruvbox-light-yellow"],

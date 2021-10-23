@@ -8,6 +8,13 @@ import PingConfig from "./components/PingConfig";
 import AtAGlance from "./components/AtAGlance";
 import Monitor from "./components/Monitor";
 import Scrollbars from "react-custom-scrollbars";
+import IPAddressTable from "./components/IPAddressTable";
+import Topology from "./components/Topology";
+
+const dummy_cytoscape_elements = {
+  nodes: [{ id: "a" }, { id: "b" }],
+  edges: [{ id: "ab", source: "a", target: "b" }],
+};
 
 export default class App extends React.Component {
   constructor(props) {
@@ -45,10 +52,13 @@ export default class App extends React.Component {
           <div className="pane_container">
             <Pane>
               <div className="tile_container_full tile_container_common">
-                <Tile title="Topology"></Tile>
+                <Tile title="Topology">
+                  <Topology elements={dummy_cytoscape_elements} />
+                </Tile>
               </div>
               <div className="tile_container_full tile_container_common">
-                <Tile title="IP Addresses"></Tile>
+                <h2 className="tile_header">IP Addresses</h2>
+                <IPAddressTable />
               </div>
             </Pane>
             <Pane>
