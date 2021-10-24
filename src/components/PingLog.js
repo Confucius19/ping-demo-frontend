@@ -9,46 +9,49 @@ import { Scrollbars } from "react-custom-scrollbars";
 const row_height = 45;
 const divider_height = 2;
 
-const example_table_data = [
-  {
-    id: 53,
-    num_packets_requested: 10,
-    records: [
-      {
-        source: "2020::A",
-        destination: "2020::C",
-        start: "10/22/2021, 4:00:19 PM 87ms",
-        duration: 234,
-        packet_size: 56,
-        was_success: true,
-      },
-    ],
-  },
-  {
-    id: 57,
-    num_packets_requested: 10,
-    records: [
-      {
-        source: "2020::A",
-        destination: "2020::C",
-        start: "10/21/2021, 4:01:19 PM 87ms",
-        duration: 234,
-        packet_size: 56,
-        was_success: true,
-      },
-    ],
-  },
-];
+// const example_table_data = [
+//   {
+//     id: 53,
+//     num_packets_requested: 10,
+//     records: [
+//       {
+//         source: "2020::A",
+//         destination: "2020::C",
+//         start: "10/22/2021, 4:00:19 PM 87ms",
+//         duration: 234,
+//         packet_size: 56,
+//         was_success: true,
+//       },
+//     ],
+//   },
+//   {
+//     id: 57,
+//     num_packets_requested: 10,
+//     records: [
+//       {
+//         source: "2020::A",
+//         destination: "2020::C",
+//         start: "10/21/2021, 4:01:19 PM 87ms",
+//         duration: 234,
+//         packet_size: 56,
+//         was_success: true,
+//       },
+//     ],
+//   },
+// ];
 
-function getPingBurstsByIds(ids) {
-  return ids.map((id) => example_table_data.find((ele) => ele.id === id));
-}
+// function getPingBurstsByIds(ids) {
+//   return ids.map((id) => example_table_data.find((ele) => ele.id === id));
+// }
 
 function PingRow(props) {
+  const start_matches = props.start.match(/(\d{1,2}:\d{1,2}:\d{1,2}.*M)/);
+  console.log(props.start);
+  const start = start_matches[1];
   const ping_cols = [
     "", //toggle filler
     `n = ${props.index + 1}`,
-    props.start,
+    start,
     props.duration,
     <StatusIndicator is_good_status={props.was_success} />,
   ];
@@ -72,6 +75,10 @@ class PingBurstRow extends React.Component {
 
   render() {
     const records = this.props.records;
+    if (records.length === 0) {
+      const pingburst_cols = ["", this.props.id, "N/A", "N/A", "N/A"];
+      return this.props.genRow(pingburst_cols);
+    }
     const min_start = records[0].start;
     const min_start_matches = min_start.match(
       /(\d{1,2}\/\d{1,2}).*(\d{1,2}:\d{1,2})/
@@ -215,17 +222,20 @@ export default class PingLog extends React.Component {
     };
 
     // const ids = [53];
-    const ids = [53, 53, 53, 53, 53, 53, 53, 53, 53, 53, 53, 53];
-    const pingbursts = getPingBurstsByIds(ids);
-    const table_rows = pingbursts.map((pingburst) => {
-      return (
-        <PingBurstRow
-          key={pingburst.id}
-          {...pingburst}
-          genRow={generateBodyRow}
-        />
-      );
-    });
+    // const ids = [53, 53, 53, 53, 53, 53, 53, 53, 53, 53, 53, 53];
+    // const pingbursts = getPingBurstsByIds(ids);
+    const table_rows = this.props.pingbursts
+      .slice()
+      .reverse()
+      .map((pingburst) => {
+        return (
+          <PingBurstRow
+            key={pingburst.id}
+            {...pingburst}
+            genRow={generateBodyRow}
+          />
+        );
+      });
     const scrollbar_style = {
       width: "100%",
       height: 8 * (row_height + divider_height),

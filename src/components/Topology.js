@@ -70,7 +70,6 @@ export default class Topology extends React.Component {
             selector: "node:selected",
             style: {
               "background-color": blue,
-              "box-shadow": "0px 0px  10px 10 px red",
             },
           },
         ]}

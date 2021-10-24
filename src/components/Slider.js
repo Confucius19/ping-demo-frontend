@@ -5,13 +5,6 @@ import RCSlider from "rc-slider";
 import "rc-slider/assets/index.css";
 
 export default class Slider extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: props.defaultValue,
-    };
-  }
-
   textChangeHandler = (event) => {
     let val = event.target.value;
     const is_valid_number = /^-{0,1}\d+$/.test(val);
@@ -24,8 +17,9 @@ export default class Slider extends React.Component {
   };
 
   changeHandler = (value) => {
-    this.setState({ value });
+    this.props.value_change_handler(this.props.name, value);
   };
+
   render() {
     const progress_color = ColorScheme.get_color("blue");
     const bg1 = ColorScheme.get_color("bg1");
@@ -64,8 +58,7 @@ export default class Slider extends React.Component {
           min={this.props.min}
           max={this.props.max}
           step={step}
-          value={this.state.value}
-          defaultValue={this.props.defaultValue}
+          value={this.props.value}
           onChange={this.changeHandler}
         ></RCSlider>
 
@@ -74,7 +67,7 @@ export default class Slider extends React.Component {
           type="text"
           style={{ backgroundColor: bg1 }}
           spellCheck="false"
-          value={String(this.state.value)}
+          value={String(this.props.value)}
           onChange={this.textChangeHandler}
         />
       </div>

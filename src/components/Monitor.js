@@ -31,7 +31,7 @@ export default class Pane extends React.Component {
             <img src={delay_icon} alt="delay" />
           </button>
         </div>
-        <PingLog />
+        <PingLog {...this.props} />
       </React.Fragment>
     );
   }

@@ -52,12 +52,29 @@ class IPAddressRow extends React.Component {
 }
 
 export default class IPAddressTable extends React.Component {
-  constructor(props) {
-    super(props);
+  render() {
+    let all_ips_selected = true;
+    for (const ip_info of this.props.ip_address_info_array) {
+      if (!ip_info.is_selected) {
+        all_ips_selected = false;
+        break;
+      }
+    }
+
+    const toggle_selection_all_ips = (val) => {
+      for (const ip_info of this.props.ip_address_info_array) {
+        this.props.ip_selection_handler(ip_info.ip_address, val);
+      }
+    };
 
     this.table_format = [
       {
-        headerValue: <CheckBox />,
+        headerValue: (
+          <CheckBox
+            is_checked={all_ips_selected}
+            click_handler={toggle_selection_all_ips}
+          />
+        ),
         style: {
           flexBasis: "40px",
           flexGrow: "0",
@@ -87,7 +104,7 @@ export default class IPAddressTable extends React.Component {
     this.table_headers = this.table_format.map((col_format) => {
       return (
         <div
-          key={Math.floor(Math.random() * 1000)}
+          key={col_format.headerValue}
           className="flex_table_datum"
           style={col_format.style}
         >
@@ -95,8 +112,7 @@ export default class IPAddressTable extends React.Component {
         </div>
       );
     });
-  }
-  render() {
+
     const bg3 = ColorScheme.get_color("bg3");
     const bg1 = ColorScheme.get_color("bg1");
     const main_table_style = {

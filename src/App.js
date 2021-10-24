@@ -62,7 +62,7 @@ export default class App extends React.Component {
     }
 
     //update pingbursts func
-    setTimeout(async () => {
+    setInterval(async () => {
       let request_opts = {
         method: "GET",
         mode: "cors",
@@ -104,8 +104,7 @@ export default class App extends React.Component {
           draft.pingbursts = pingbursts;
         });
       });
-      console.log(this.state, topology);
-    }, 0);
+    }, 1000);
   }
 
   ip_selection_handler = (ip, is_selected) => {
@@ -147,17 +146,19 @@ export default class App extends React.Component {
               <div className="tile_container_hstack tile_container_common">
                 <div className="tile_container_half">
                   <Tile title="Ping Config">
-                    <PingConfig />
+                    <PingConfig
+                      ip_address_info_array={this.state.ip_address_info_array}
+                    />
                   </Tile>
                 </div>
                 <div className="tile_container_half">
                   <Tile title="At A Glance">
-                    <AtAGlance />
+                    <AtAGlance {...this.state} />
                   </Tile>
                 </div>
               </div>
               <div className="tile_container_full tile_container_common">
-                <Monitor />
+                <Monitor {...this.state} />
               </div>
             </Pane>
           </div>
