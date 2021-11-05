@@ -1,13 +1,15 @@
 import React from "react";
 import ColorScheme from "../ColorScheme";
+import { motion } from "framer-motion";
+import ReactTooltip from "react-tooltip";
 
 export default class MagnitudeIndicator extends React.Component {
   render() {
     //
     // this.props.thresholds
     const thresholds = {
-      0.3: ColorScheme.get_color("green"),
-      0.6: ColorScheme.get_color("yellow"),
+      0.33: ColorScheme.get_color("green"),
+      0.66: ColorScheme.get_color("yellow"),
       0.9: ColorScheme.get_color("red"),
     };
 
@@ -19,9 +21,10 @@ export default class MagnitudeIndicator extends React.Component {
       borderRadius,
       height,
       width: "80%",
+      overflow: "hidden",
     };
 
-    const value = this.props.value;
+    const value = Math.min(1, this.props.value);
     let foreground_color;
     for (let threshold_val in thresholds) {
       foreground_color = thresholds[threshold_val];
@@ -40,11 +43,19 @@ export default class MagnitudeIndicator extends React.Component {
       background_style[key] = this.props.style[key];
       foreground_style[key] = this.props.style[key];
     }
-
+    const width = (value * 0.9 + 0.15) * 100;
     return (
-      <div style={background_style}>
-        <div style={foreground_style}></div>
-      </div>
+      <>
+        <div style={background_style} data-tip={this.props.tooltip || "N/A"}>
+          <motion.div
+            animate={{ width }}
+            transition={{ duration: 0.5 }}
+            initial={false}
+            style={foreground_style}
+          />
+        </div>
+        <ReactTooltip effect="solid" place="bottom" delayHide={0} />
+      </>
     );
   }
 }

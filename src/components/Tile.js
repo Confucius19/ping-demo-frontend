@@ -9,7 +9,9 @@ export default class Tile extends React.Component {
     };
     return (
       <React.Fragment>
-        <h2 className="tile_header">{this.props.title}</h2>
+        {!this.props.omit_header && (
+          <h2 className="tile_header">{this.props.title}</h2>
+        )}
         <div className="tile" style={style}>
           {this.props.children}
         </div>

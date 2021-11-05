@@ -5,57 +5,28 @@ import toggle_icon from "../icons/toggle_icon.svg";
 import MagnitudeIndicator from "./MagnitudeIndicator";
 import StatusIndicator from "./StatusIndicator";
 import { Scrollbars } from "react-custom-scrollbars";
+import { AnimatePresence, motion } from "framer-motion";
 
 const row_height = 45;
 const divider_height = 2;
 
-// const example_table_data = [
-//   {
-//     id: 53,
-//     num_packets_requested: 10,
-//     records: [
-//       {
-//         source: "2020::A",
-//         destination: "2020::C",
-//         start: "10/22/2021, 4:00:19 PM 87ms",
-//         duration: 234,
-//         packet_size: 56,
-//         was_success: true,
-//       },
-//     ],
-//   },
-//   {
-//     id: 57,
-//     num_packets_requested: 10,
-//     records: [
-//       {
-//         source: "2020::A",
-//         destination: "2020::C",
-//         start: "10/21/2021, 4:01:19 PM 87ms",
-//         duration: 234,
-//         packet_size: 56,
-//         was_success: true,
-//       },
-//     ],
-//   },
-// ];
-
-// function getPingBurstsByIds(ids) {
-//   return ids.map((id) => example_table_data.find((ele) => ele.id === id));
-// }
+const duration_max_baseline = 600;
 
 function PingRow(props) {
   const start_matches = props.start.match(/(\d{1,2}:\d{1,2}:\d{1,2}.*M)/);
-  console.log(props.start);
+  // console.log(props.start);
   const start = start_matches[1];
   const ping_cols = [
     "", //toggle filler
     `n = ${props.index + 1}`,
     start,
-    props.duration,
+    <MagnitudeIndicator
+      value={props.duration / duration_max_baseline}
+      tooltip={`${props.duration.toFixed(2)}ms`}
+    />,
+
     <StatusIndicator is_good_status={props.was_success} />,
   ];
-
   return props.genRow(ping_cols);
 }
 
@@ -81,9 +52,12 @@ class PingBurstRow extends React.Component {
     }
     const min_start = records[0].start;
     const min_start_matches = min_start.match(
-      /(\d{1,2}\/\d{1,2}).*(\d{1,2}:\d{1,2})/
+      /(\d{1,2}\/\d{1,2}).*(\d{1,2}:\d{1,2}:\d{1,2}).*(.M)/
     );
-    const min_start_str = min_start_matches[1] + " " + min_start_matches[2];
+    const min_start_str =
+      // min_start_matches[1] +
+      // " " +
+      min_start_matches[2] + " " + min_start_matches[3];
 
     const valid_duration_records = records.filter(
       (record) => record.duration !== -1
@@ -93,14 +67,21 @@ class PingBurstRow extends React.Component {
         (acc, cur) => (cur === -1 ? acc : acc + cur.duration),
         0
       ) / valid_duration_records.length;
-    const max_duration = 300;
     const duration_indicator = (
-      <MagnitudeIndicator value={average_duration / max_duration} />
+      <MagnitudeIndicator
+        value={average_duration / duration_max_baseline}
+        tooltip={`${average_duration.toFixed(2)}ms`}
+      />
     );
     const error_rate =
       records.reduce((acc, record) => acc + (record.was_success ? 0 : 1), 0) /
       records.length;
-    const error_rate_indicator = <MagnitudeIndicator value={error_rate} />;
+    const error_rate_indicator = (
+      <MagnitudeIndicator
+        value={error_rate}
+        tooltip={`${error_rate.toFixed(2) * 100}%`}
+      />
+    );
     const ping_rows = records.map((record, index) => (
       <PingRow
         key={record.start}
@@ -111,17 +92,16 @@ class PingBurstRow extends React.Component {
       />
     ));
 
-    const toggle = this.state.is_collapsed ? (
-      <img
+    const toggle = (
+      <motion.img
+        style={{ userSelect: "none", cursor: "pointer" }}
+        animate={{
+          rotate: this.state.is_collapsed ? 0 : 90,
+        }}
+        initial={false}
         onClick={this.handle_collapse_toggle}
         src={toggle_icon}
         alt="Toggle Right"
-      />
-    ) : (
-      <img
-        onClick={this.handle_collapse_toggle}
-        src={toggle_icon}
-        alt="Toggle Down"
       />
     );
 
@@ -132,10 +112,34 @@ class PingBurstRow extends React.Component {
       duration_indicator,
       error_rate_indicator,
     ];
+
+    const ping_row_variants = {
+      collapsed: {
+        height: 0,
+      },
+      open: {
+        height: this.props.total_row_height * this.props.records.length,
+      },
+    };
+
     return (
       <React.Fragment>
         {this.props.genRow(pingburst_cols)}
-        {!this.state.is_collapsed && ping_rows}
+        <AnimatePresence>
+          {!this.state.is_collapsed && (
+            <motion.div
+              variants={ping_row_variants}
+              style={{
+                overflow: "hidden",
+              }}
+              initial="collapsed"
+              animate="open"
+              exit="collapsed"
+            >
+              {ping_rows}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </React.Fragment>
     );
   }
@@ -192,6 +196,7 @@ export default class PingLog extends React.Component {
       );
     });
   }
+
   render() {
     const bg3 = ColorScheme.get_color("bg3");
     const bg1 = ColorScheme.get_color("bg1");
@@ -200,7 +205,7 @@ export default class PingLog extends React.Component {
       height: 8 * (row_height + divider_height) + row_height,
     };
     // const ids = [53, 53, 53, 53, 53, 53, 53, 53, 53, 57];
-    const generateBodyRow = (elements) => {
+    const generateBodyRow = (elements, wrapper_props = {}) => {
       console.assert(elements.length === this.table_format.length);
       const wrapped_elems = elements.map((ele, index) => {
         let bodyRowStyle = this.table_format[index].style;
@@ -210,14 +215,27 @@ export default class PingLog extends React.Component {
           </div>
         );
       });
-      const body_row_style = {
+      let body_row_style = {
         borderBottom: `${divider_height}px solid ${bg1}`,
         height: row_height,
       };
+
+      if (wrapper_props["style"]) {
+        body_row_style = Object.assign(
+          {},
+          wrapper_props["style"],
+          body_row_style
+        ); //rightmost gets precedence
+        delete wrapper_props["style"];
+      }
       return (
-        <div style={body_row_style} className="flex_table_row">
+        <motion.div
+          style={body_row_style}
+          className="flex_table_row"
+          {...wrapper_props}
+        >
           {wrapped_elems}
-        </div>
+        </motion.div>
       );
     };
 
@@ -231,7 +249,7 @@ export default class PingLog extends React.Component {
         return (
           <PingBurstRow
             key={pingburst.id}
-            {...pingburst}
+            {...{ total_row_height: row_height + divider_height, ...pingburst }}
             genRow={generateBodyRow}
           />
         );
@@ -249,7 +267,9 @@ export default class PingLog extends React.Component {
           {this.table_headers}
         </div>
         <Scrollbars style={scrollbar_style}>
-          <div className="flex_table_body">{table_rows}</div>
+          <div style={{ position: "relative" }} className="flex_table_body">
+            {table_rows}
+          </div>
         </Scrollbars>
       </div>
     );

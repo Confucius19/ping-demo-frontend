@@ -60,6 +60,10 @@ export default class App extends React.Component {
     for (const key in app_fonts) {
       body.style[key] = app_fonts[key];
     }
+    //Sets API location
+    if (document.ping_api_location === undefined) {
+      document.ping_api_location = "http://localhost:8000";
+    }
 
     //update pingbursts func
     setInterval(async () => {
@@ -67,10 +71,25 @@ export default class App extends React.Component {
         method: "GET",
         mode: "cors",
       };
-      const pingburst_res = await fetch("pingbursts", request_opts);
-      const pingbursts = await pingburst_res.json();
-      const topology_res = await fetch("topology", request_opts);
+      let pingburst_res, topology_res;
+      try {
+        pingburst_res = await fetch(
+          new URL("pingbursts", document.ping_api_location),
+          request_opts
+        );
+        topology_res = await fetch(
+          new URL("topology", document.ping_api_location),
+          request_opts
+        );
+        if (!pingburst_res.ok || !topology_res.ok) {
+          throw Error("[PING MODULE] : Received not ok response");
+        }
+      } catch (error) {
+        console.debug(error);
+        return;
+      }
       const topology = await topology_res.json();
+      const pingbursts = await pingburst_res.json();
       this.setState((state) => {
         return produce(state, (draft) => {
           //find diff of ip_addresses

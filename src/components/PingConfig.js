@@ -1,7 +1,9 @@
 import React from "react";
+import { motion } from "framer-motion";
 import Slider from "./Slider";
 import "../assets/PingConfig.css";
 import ColorScheme from "../ColorScheme";
+import PingSubmit from "./PingSubmit";
 
 export default class PingConfiguration extends React.Component {
   constructor(props) {
@@ -30,10 +32,12 @@ export default class PingConfiguration extends React.Component {
       mode: "cors",
     };
     request_opts["body"] = JSON.stringify(pingburst_request);
-    fetch("pingbursts", request_opts).then(async (res) => {
-      //respons is id
-      // console.log(await res.json());
-    });
+    fetch(new URL("pingbursts", document.ping_api_location), request_opts).then(
+      async (res) => {
+        //respons is id
+        // console.log(await res.json());
+      }
+    );
     // console.log("Sent Pingburst!", pingburst_request);
   };
 
@@ -82,19 +86,12 @@ export default class PingConfiguration extends React.Component {
         <label className="ping_form_label">Number of Packets</label>
         <Slider
           min={1}
-          max={30}
+          max={300000}
           name="num_packets"
           value={this.state.num_packets}
           value_change_handler={this.paramter_change_handler}
         />
-        <button
-          type="button"
-          onClick={this.click_handler}
-          style={{ backgroundColor: ColorScheme.get_color("blue") }}
-          className="blue_button ping_submit"
-        >
-          Submit
-        </button>
+        <PingSubmit click_handler={this.click_handler} />
       </div>
     );
   }
