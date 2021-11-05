@@ -6,6 +6,9 @@ import delay_icon from "../icons/delay_icon.svg";
 import ColorScheme from "../ColorScheme";
 import PingLog from "./PingLog";
 import DelayMonitor from "./DelayMonitor";
+import Tile from "./Tile";
+import BarChart from "./BarChart";
+import PieChart from "./PieChart";
 
 const MONITOR_STATE = {
   LOG: 0,
@@ -22,54 +25,74 @@ export default class Monitor extends React.Component {
     };
   }
 
-  state_changer = (target_state) => {
-    if (this.state.monitor_state === target_state) {
-      return;
-    }
-    this.setState({ monitor_state: target_state });
-  };
-
   render() {
-    const bg0 = ColorScheme.get_color("bg0");
-
-    let display_element;
+    console.log(this.props.pingbursts);
+    let current_display = null;
     switch (this.state.monitor_state) {
-      case MONITOR_STATE.LOG:
-      case MONITOR_STATE.HEALTH:
-        display_element = <PingLog {...this.props} />;
-        break;
       case MONITOR_STATE.DELAY:
-        display_element = <DelayMonitor {...this.props} />;
+        current_display = <DelayMonitor {...this.props} />;
+        break;
+      case MONITOR_STATE.LOG:
+        current_display = <PingLog {...this.props} />;
+        break;
+      case MONITOR_STATE.HEALTH:
+        current_display = (
+          <Tile>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                gap: 50,
+              }}
+            >
+              <BarChart pingbursts={this.props.pingbursts} />
+              <PieChart pingbursts={this.props.pingbursts} />
+            </div>
+          </Tile>
+        );
         break;
       default:
-        console.error("Encountered invalid MONITOR_STATE");
+        console.error(
+          "Encountered invalid MONITOR_STATE",
+          this.state.monitor_state
+        );
     }
+
+    const bg0 = ColorScheme.get_color("bg0");
+
     return (
       <React.Fragment>
         <div className="monitor_tab_button_array">
           <button
             style={{ backgroundColor: bg0 }}
             className="monitor_tab_button"
-            onClick={() => this.state_changer(MONITOR_STATE.LOG)}
+            onClick={() => {
+              this.setState({ monitor_state: MONITOR_STATE.LOG });
+            }}
           >
             <img src={log_icon} alt="log" />
           </button>
           <button
             style={{ backgroundColor: bg0 }}
             className="monitor_tab_button"
-            onClick={() => this.state_changer(MONITOR_STATE.HEALTH)}
+            onClick={() => {
+              this.setState({ monitor_state: MONITOR_STATE.HEALTH });
+            }}
           >
             <img src={health_icon} alt="health" />
           </button>
           <button
             style={{ backgroundColor: bg0 }}
             className="monitor_tab_button"
-            onClick={() => this.state_changer(MONITOR_STATE.DELAY)}
+            onClick={() => {
+              this.setState({ monitor_state: MONITOR_STATE.DELAY });
+            }}
           >
             <img src={delay_icon} alt="delay" />
           </button>
         </div>
-        {display_element}
+        {current_display}
       </React.Fragment>
     );
   }
