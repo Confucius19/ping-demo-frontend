@@ -1,5 +1,3 @@
-import React, { useContext } from "react";
-import { ColorScheme, ThemeContext, THEME } from "../ColorScheme";
 import "../assets/FlexTable.css";
 import CheckBox from "./CheckBox";
 import StatusIndicator from "./StatusIndicator";

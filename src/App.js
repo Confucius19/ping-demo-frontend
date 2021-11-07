@@ -46,6 +46,14 @@ function nickname_generator() {
   return nicknames[index];
 }
 
+export function get_ip_address_info_by_ip(ip_address_info_array, ip) {
+  for (const ip_address_info of ip_address_info_array) {
+    if (ip_address_info.ip_address === ip) {
+      return ip_address_info;
+    }
+  }
+}
+
 export default class App extends React.Component {
   constructor(props) {
     super(props);
@@ -53,7 +61,7 @@ export default class App extends React.Component {
       topology: { nodes: [], edges: [] },
       ip_address_info_array: [],
       pingbursts: [],
-      theme: THEME.GRUVBOX,
+      theme: THEME.TI,
     };
 
     let body = document.getElementsByTagName("body")[0];

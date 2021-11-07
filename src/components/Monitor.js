@@ -6,9 +6,7 @@ import delay_icon from "../icons/delay_icon.svg";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import PingLog from "./PingLog";
 import DelayMonitor from "./DelayMonitor";
-import Tile from "./Tile";
-import BarChart from "./BarChart";
-import PieChart from "./PieChart";
+import HealthMonitor from "./HealthMonitor";
 
 const MONITOR_STATE = {
   LOG: 0,
@@ -35,21 +33,7 @@ export default class Monitor extends React.Component {
         current_display = <PingLog {...this.props} />;
         break;
       case MONITOR_STATE.HEALTH:
-        current_display = (
-          <Tile omit_header={true}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                width: "100%",
-                gap: 50,
-              }}
-            >
-              <BarChart pingbursts={this.props.pingbursts} />
-              <PieChart pingbursts={this.props.pingbursts} />
-            </div>
-          </Tile>
-        );
+        current_display = <HealthMonitor {...this.props} />;
         break;
       default:
         console.error(

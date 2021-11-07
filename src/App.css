@@ -36,7 +36,8 @@ img {
   display:flex;
   flex-direction: column;
   justify-content: flex-start;
-  width : 100%
+  width : 100%;
+  margin-bottom: 100px;
 }
  .pane_container{
    width: 91.67vw;

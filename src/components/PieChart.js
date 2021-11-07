@@ -1,88 +1,74 @@
-import React from "react";
+import { useContext } from "react";
 import { Pie } from "react-chartjs-2";
+import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
+import { HEALTH_CATEGORY } from "./HealthMonitor";
 
-export default class PieChart extends React.Component {
-  render() {
-    const average = (array) => array.reduce((a, b) => a + b) / array.length;
+export default function PieChart(props) {
+  const results_map = props.results_map;
+  const results_array = [...results_map.values()];
+  const category_map = new Map();
 
-    var pingbursts = this.props.pingbursts;
+  const color_map = props.category_color_map;
 
-    var ping_reslts_map = new Map(); //has the ip's and the average success rate as the value
+  function constructCategory(health_category) {
+    const filtered_results = results_array.filter(
+      (result) => result.health_category === health_category
+    );
+    category_map.set(health_category, filtered_results);
+  }
+  constructCategory(HEALTH_CATEGORY.URGENT);
+  constructCategory(HEALTH_CATEGORY.POOR);
+  constructCategory(HEALTH_CATEGORY.FAIR);
+  constructCategory(HEALTH_CATEGORY.GOOD);
 
-    pingbursts.map((id) => {
-      var value =
-        average(
-          id["records"].map((records) => (records["was_success"] ? 1 : 0))
-        ) * 100; //get the average of the current ping id
+  const theme = useContext(ThemeContext);
+  let text_color = null;
+  let grid_color = null;
+  if (theme === THEME.TI) {
+    text_color = ColorScheme.get_color("gray", theme);
+    grid_color = ColorScheme.get_color_with_opacity("gray_light", 0.6, theme);
+  } else {
+    text_color = ColorScheme.get_color("white", theme);
+    grid_color = ColorScheme.get_color_with_opacity("gray", 0.6, theme);
+  }
 
-      ping_reslts_map.set(
-        id["records"][0]["dest_ip"],
-        ping_reslts_map.has(id["records"][0]["dest_ip"])
-          ? (ping_reslts_map.get(id["records"][0]["dest_ip"]) + value) / 2
-          : value
-      );
-    });
-
-    var category_map = new Map();
-    category_map.set("0-30", []);
-    category_map.set("30-60", []);
-    category_map.set("60-90", []);
-    category_map.set("90-100", []);
-
-    for (let ip of ping_reslts_map.keys()) {
-      if (ping_reslts_map.get(ip) <= 30) {
-        category_map.set("0-30", [...category_map.get("0-30"), ip]);
-      } else if (ping_reslts_map.get(ip) <= 60) {
-        category_map.set("30-60", [...category_map.get("30-60"), ip]);
-      } else if (ping_reslts_map.get(ip) <= 90) {
-        category_map.set("60-90", [...category_map.get("60-90"), ip]);
-      } else {
-        category_map.set("90-100", [...category_map.get("90-100"), ip]);
-      }
-    }
-    console.log([...category_map.values()].map((x) => x.length));
-    //pingbursts.map(x => x["records"].map(y => y["was_success"]?1:0))
-    //console.log(ip_info_array.map(x => x["ip_address"]));
-    // pingbursts.map(x => x["records"][0]["dest_ip"])
-
-    return (
-      <div class="row">
-        <Pie
-          data={{
-            labels: [...category_map.keys()],
-            datasets: [
-              {
-                label: "# vs average error rate",
-                data: [...category_map.values()].map((x) => x.length),
-                backgroundColor: [
-                  "rgba(255, 0, 0, 0.6)",
-                  "rgba(255, 165, 0, 0.6)",
-                  "rgba(255, 230, 0, 0.6)",
-                  "rgba(0, 200, 0, 0.6)",
-                ],
-                borderColor: [
-                  "rgba(255, 0, 0, 1)",
-                  "rgba(255, 165, 0, 1)",
-                  "rgba(255, 230, 0, 1)",
-                  "rgba(0, 200, 0, 1)",
-                ],
-                borderWidth: 2,
-              },
-            ],
-          }}
-          height={500}
-          width="100%"
-          options={{
-            maintainAspectRatio: false,
-
+  return (
+    <div>
+      <Pie
+        data={{
+          labels: [...category_map.keys()],
+          datasets: [
+            {
+              data: [...category_map.values()].map((x) => x.length),
+              backgroundColor: [...category_map.keys()].map(
+                (category) => color_map[category].background
+              ),
+              borderColor: [...category_map.keys()].map(
+                (category) => color_map[category].border
+              ),
+              borderWidth: 2,
+            },
+          ],
+        }}
+        height={400}
+        // width="100%"
+        options={{
+          plugins: {
+            title: {
+              display: true,
+              text: "Average Success Rate of Network Nodes",
+              color: text_color,
+            },
             legend: {
               labels: {
                 fontSize: 25,
+                color: text_color,
               },
             },
-          }}
-        />
-      </div>
-    );
-  }
+          },
+          maintainAspectRatio: false,
+        }}
+      />
+    </div>
+  );
 }

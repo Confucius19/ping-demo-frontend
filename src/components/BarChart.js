@@ -1,81 +1,89 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Bar } from "react-chartjs-2";
+import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 
-export default class BarChart extends React.Component {
-  render() {
-    const average = (array) => array.reduce((a, b) => a + b) / array.length;
+export default function BarChart(props) {
+  const results_map = props.results_map;
+  const results_array = [...results_map.values()];
 
-    var pingbursts = this.props.pingbursts;
+  const color_map = props.category_color_map;
+  const data = results_array.map((result) => result.average_success);
+  const backgroundColor = results_array.map((result) => {
+    return color_map[result.health_category].background;
+  });
+  const borderColor = results_array.map(
+    (result) => color_map[result.health_category].border
+  );
 
-    var reslts_map = new Map(); //has the ip's and the average success rate as the value
+  const theme = useContext(ThemeContext);
+  let text_color = null;
+  let grid_color = null;
+  if (theme === THEME.TI) {
+    text_color = ColorScheme.get_color("gray", theme);
+    grid_color = ColorScheme.get_color_with_opacity("gray_light", 0.6, theme);
+  } else {
+    text_color = ColorScheme.get_color("white", theme);
+    grid_color = ColorScheme.get_color_with_opacity("gray", 0.6, theme);
+  }
 
-    pingbursts.map((x) => {
-      var value =
-        average(
-          x["records"].map((records) => (records["was_success"] ? 1 : 0))
-        ) * 100; //get the average of the current ping id
-
-      reslts_map.set(
-        x["records"][0]["dest_ip"],
-        reslts_map.has(x["records"][0]["dest_ip"])
-          ? (reslts_map.get(x["records"][0]["dest_ip"]) + value) / 2
-          : value
-      );
-    });
-
-    //console.log([...reslts_map.keys()])
-    //pingbursts.map(x => x["records"].map(y => y["was_success"]?1:0))
-    //console.log(ip_info_array.map(x => x["ip_address"]));
-    // pingbursts.map(x => x["records"][0]["dest_ip"])
-
-    return (
-      <div>
-        <Bar
-          data={{
-            labels: [...reslts_map.keys()],
-            datasets: [
-              {
-                label: "average success rate",
-                data: [...reslts_map.values()],
-                backgroundColor: [
-                  "rgba(255, 99, 132, 0.6)",
-                  "rgba(54, 162, 235, 0.6)",
-                  "rgba(255, 206, 86, 0.6)",
-                  "rgba(75, 192, 192, 0.6)",
-                  "rgba(153, 102, 255, 0.6)",
-                  "rgba(255, 159, 64, 0.6)",
-                ],
-                borderColor: [
-                  "rgba(255, 99, 132, 1)",
-                  "rgba(54, 162, 235, 1)",
-                  "rgba(255, 206, 86, 1)",
-                  "rgba(75, 192, 192, 1)",
-                  "rgba(153, 102, 255, 1)",
-                  "rgba(255, 159, 64, 1)",
-                ],
-                borderWidth: 2,
-              },
-            ],
-          }}
-          height={500}
-          width="100%"
-          options={{
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                max: 100,
-                beginAtZero: true,
-              },
+  return (
+    <div>
+      <Bar
+        data={{
+          labels: [...results_map.keys()],
+          datasets: [
+            {
+              // label: "average success rate",
+              data,
+              backgroundColor,
+              borderColor,
+              borderWidth: 2,
+            },
+          ],
+        }}
+        height={400} //
+        // width={200}
+        color={text_color}
+        options={{
+          plugins: {
+            title: {
+              display: true,
+              text: "Average Success Rate per Network Node",
+              color: text_color,
             },
 
             legend: {
-              labels: {
-                fontSize: 25,
+              display: false,
+            },
+          },
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              max: 100,
+              beginAtZero: true,
+              ticks: {
+                color: text_color,
+              },
+              grid: {
+                color: grid_color,
+              },
+              title: {
+                display: true,
+                text: "Percent Success",
+                color: text_color,
               },
             },
-          }}
-        />
-      </div>
-    );
-  }
+            x: {
+              ticks: {
+                color: text_color,
+              },
+              grid: {
+                color: grid_color,
+              },
+            },
+          },
+        }}
+      />
+    </div>
+  );
 }
