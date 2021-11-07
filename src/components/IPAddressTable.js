@@ -1,12 +1,9 @@
-import React from "react";
-import ColorScheme from "../ColorScheme";
+import React, { useContext } from "react";
+import { ColorScheme, ThemeContext, THEME } from "../ColorScheme";
 import "../assets/FlexTable.css";
-import { Scrollbars } from "react-custom-scrollbars";
 import CheckBox from "./CheckBox";
 import StatusIndicator from "./StatusIndicator";
-
-const row_height = 45;
-const divider_height = 2;
+import FlexTable from "./FlexTable";
 
 // const example_ip_address_info_array = [
 //   {
@@ -35,140 +32,81 @@ const divider_height = 2;
 //   );
 // }
 
-class IPAddressRow extends React.Component {
-  render() {
-    return this.props.genRow([
-      <CheckBox
-        click_handler={(newVal) =>
-          this.props.ip_selection_handler(this.props.ip_address, newVal)
-        }
-        is_checked={this.props.is_selected}
-      />,
-      this.props.ip_address,
-      this.props.nickname,
-      <StatusIndicator is_good_status={this.props.is_connected} />,
-    ]);
-  }
+function IPAddressRow(props) {
+  return props.genRow([
+    <CheckBox
+      click_handler={(newVal) =>
+        props.ip_selection_handler(props.ip_address, newVal)
+      }
+      is_checked={props.is_selected}
+    />,
+    props.ip_address,
+    props.nickname,
+    <StatusIndicator is_good_status={props.is_connected} />,
+  ]);
 }
 
-export default class IPAddressTable extends React.Component {
-  render() {
-    let all_ips_selected = true;
-    for (const ip_info of this.props.ip_address_info_array) {
-      if (!ip_info.is_selected) {
-        all_ips_selected = false;
-        break;
-      }
+export default function IPAddressTable(props) {
+  let all_ips_selected = true;
+  for (const ip_info of props.ip_address_info_array) {
+    if (!ip_info.is_selected) {
+      all_ips_selected = false;
+      break;
     }
-
-    const toggle_selection_all_ips = (val) => {
-      for (const ip_info of this.props.ip_address_info_array) {
-        this.props.ip_selection_handler(ip_info.ip_address, val);
-      }
-    };
-
-    this.table_format = [
-      {
-        headerValue: (
-          <CheckBox
-            is_checked={all_ips_selected}
-            click_handler={toggle_selection_all_ips}
-          />
-        ),
-        style: {
-          flexBasis: "40px",
-          flexGrow: "0",
-        },
-      },
-      {
-        headerValue: "IP",
-        style: {
-          flexGrow: "1",
-        },
-      },
-      {
-        headerValue: "Nickname",
-        style: {
-          flexGrow: "1",
-        },
-      },
-      {
-        headerValue: "Status",
-        style: {
-          flexBasis: "100px",
-          flexGrow: "0",
-        },
-      },
-    ];
-
-    this.table_headers = this.table_format.map((col_format) => {
-      return (
-        <div
-          key={col_format.headerValue}
-          className="flex_table_datum"
-          style={col_format.style}
-        >
-          {col_format.headerValue}
-        </div>
-      );
-    });
-
-    const bg3 = ColorScheme.get_color("bg3");
-    const bg1 = ColorScheme.get_color("bg1");
-    const main_table_style = {
-      backgroundColor: ColorScheme.get_color("bg2"),
-      height: 8 * (row_height + divider_height) + row_height,
-    };
-
-    const generateBodyRow = (elements) => {
-      console.assert(elements.length === this.table_format.length);
-      const wrapped_elems = elements.map((ele, index) => {
-        let bodyRowStyle = this.table_format[index].style;
-        return (
-          <div className="flex_table_datum" style={bodyRowStyle} key={index}>
-            {ele}
-          </div>
-        );
-      });
-      const body_row_style = {
-        borderBottom: `${divider_height}px solid ${bg1}`,
-        height: row_height,
-      };
-      return (
-        <div style={body_row_style} className="flex_table_row">
-          {wrapped_elems}
-        </div>
-      );
-    };
-
-    const table_rows = this.props.ip_address_info_array.map(
-      (ip_address_info) => {
-        return (
-          <IPAddressRow
-            key={ip_address_info.ip_address}
-            {...ip_address_info}
-            ip_selection_handler={this.props.ip_selection_handler}
-            genRow={generateBodyRow}
-          />
-        );
-      }
-    );
-    const scrollbar_style = {
-      width: "100%",
-      height: 8 * (row_height + divider_height),
-    };
-    return (
-      <div style={main_table_style} className="flex_table">
-        <div
-          style={{ backgroundColor: bg3, height: row_height }}
-          className="flex_table_row flex_table_header_row"
-        >
-          {this.table_headers}
-        </div>
-        <Scrollbars style={scrollbar_style}>
-          <div className="flex_table_body">{table_rows}</div>
-        </Scrollbars>
-      </div>
-    );
   }
+
+  const toggle_selection_all_ips = (val) => {
+    for (const ip_info of props.ip_address_info_array) {
+      props.ip_selection_handler(ip_info.ip_address, val);
+    }
+  };
+
+  const table_format = [
+    {
+      headerValue: (
+        <CheckBox
+          is_checked={all_ips_selected}
+          click_handler={toggle_selection_all_ips}
+        />
+      ),
+      style: {
+        flexBasis: "40px",
+        flexGrow: "0",
+      },
+    },
+    {
+      headerValue: "IP",
+      style: {
+        flexGrow: "1",
+      },
+    },
+    {
+      headerValue: "Nickname",
+      style: {
+        flexGrow: "1",
+      },
+    },
+    {
+      headerValue: "Status",
+      style: {
+        flexBasis: "100px",
+        flexGrow: "0",
+      },
+    },
+  ];
+
+  const table_rows = props.ip_address_info_array.map((ip_address_info) => {
+    return {
+      id: ip_address_info.ip_address,
+      ip_selection_handler: props.ip_selection_handler,
+      ...ip_address_info,
+    };
+  });
+  return (
+    <FlexTable
+      row_component={IPAddressRow}
+      table_format={table_format}
+      table_rows={table_rows}
+    />
+  );
 }

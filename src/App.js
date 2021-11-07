@@ -1,9 +1,9 @@
 import React from "react";
 import "./App.css";
 import app_fonts from "./AppFonts.js";
-import ColorScheme from "./ColorScheme";
+import { THEME, ColorScheme, ThemeContext } from "./ColorScheme";
 import Pane from "./components/Pane";
-import Tile from "./components/Tile";
+import Tile, { TileHeader } from "./components/Tile";
 import PingConfig from "./components/PingConfig";
 import AtAGlance from "./components/AtAGlance";
 import Monitor from "./components/Monitor";
@@ -11,6 +11,7 @@ import Scrollbars from "react-custom-scrollbars";
 import IPAddressTable from "./components/IPAddressTable";
 import Topology from "./components/Topology";
 import produce from "immer";
+import ThemeToggle from "./components/ThemeToggle";
 
 function nickname_generator() {
   const nicknames = [
@@ -52,14 +53,18 @@ export default class App extends React.Component {
       topology: { nodes: [], edges: [] },
       ip_address_info_array: [],
       pingbursts: [],
+      theme: THEME.GRUVBOX,
     };
+
     let body = document.getElementsByTagName("body")[0];
-    body.style.backgroundColor = ColorScheme.get_color("bg0");
+    body.style.backgroundColor = ColorScheme.get_color("bg0", this.state.theme);
     body.style.boxSizing = "border-box";
     body.style.margin = "0";
+
     for (const key in app_fonts) {
       body.style[key] = app_fonts[key];
     }
+
     //Sets API location
     if (document.ping_api_location === undefined) {
       document.ping_api_location = "http://localhost:8000";
@@ -138,51 +143,69 @@ export default class App extends React.Component {
   };
 
   render() {
+    let body = document.getElementsByTagName("body")[0];
+    body.style.backgroundColor = ColorScheme.get_color("bg0", this.state.theme);
+    const dash_title_container_style = {
+      backgroundColor:
+        this.state.theme === "ti"
+          ? ColorScheme.get_color("red", THEME.TI)
+          : "rgba(0,0,0,0)",
+    };
     return (
-      <Scrollbars style={{ height: "100vh", width: "100vw" }}>
-        <div className="top_vstack">
-          <h1 className="dash_title">Your Wi-SUN Network</h1>
-          <div className="pane_container">
-            <Pane>
-              <div className="tile_container_full tile_container_common">
-                <Tile title="Topology">
-                  <Topology
-                    ip_selection_handler={this.ip_selection_handler}
-                    ip_address_info_array={this.state.ip_address_info_array}
-                    elements={this.state.topology}
-                  />
-                </Tile>
-              </div>
-              <div className="tile_container_full tile_container_common">
-                <h2 className="tile_header">IP Addresses</h2>
-                <IPAddressTable
-                  ip_selection_handler={this.ip_selection_handler}
-                  ip_address_info_array={this.state.ip_address_info_array}
-                />
-              </div>
-            </Pane>
-            <Pane>
-              <div className="tile_container_hstack tile_container_common">
-                <div className="tile_container_half">
-                  <Tile title="Ping Config">
-                    <PingConfig
+      <ThemeContext.Provider value={this.state.theme}>
+        <Scrollbars style={{ height: "100vh", width: "100vw" }}>
+          <div className="top_vstack">
+            <div
+              className="dash_title_container"
+              style={dash_title_container_style}
+            >
+              <h1 className="dash_title">Your Wi-SUN Network</h1>
+              <ThemeToggle
+                handle_new_theme={(theme) => this.setState({ theme })}
+              />
+            </div>
+            <div className="pane_container">
+              <Pane>
+                <div className="tile_container_full tile_container_common">
+                  <Tile title="Topology">
+                    <Topology
+                      ip_selection_handler={this.ip_selection_handler}
                       ip_address_info_array={this.state.ip_address_info_array}
+                      elements={this.state.topology}
                     />
                   </Tile>
                 </div>
-                <div className="tile_container_half">
-                  <Tile title="At A Glance">
-                    <AtAGlance {...this.state} />
-                  </Tile>
+                <div className="tile_container_full tile_container_common">
+                  <TileHeader title="IP Addresses" />
+                  <IPAddressTable
+                    ip_selection_handler={this.ip_selection_handler}
+                    ip_address_info_array={this.state.ip_address_info_array}
+                  />
                 </div>
-              </div>
-              <div className="tile_container_full tile_container_common">
-                <Monitor {...this.state} />
-              </div>
-            </Pane>
+              </Pane>
+              <Pane>
+                <div className="tile_container_hstack tile_container_common">
+                  <div className="tile_container_half">
+                    <Tile title="Ping Config">
+                      <PingConfig
+                        ip_address_info_array={this.state.ip_address_info_array}
+                      />
+                    </Tile>
+                  </div>
+                  <div className="tile_container_half">
+                    <Tile title="At A Glance">
+                      <AtAGlance {...this.state} />
+                    </Tile>
+                  </div>
+                </div>
+                <div className="tile_container_full tile_container_common">
+                  <Monitor {...this.state} />
+                </div>
+              </Pane>
+            </div>
           </div>
-        </div>
-      </Scrollbars>
+        </Scrollbars>
+      </ThemeContext.Provider>
     );
   }
 }

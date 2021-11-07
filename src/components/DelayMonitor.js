@@ -1,7 +1,7 @@
 import React from "react";
 import Tile from "./Tile";
 import * as d3 from "d3";
-import ColorScheme from "../ColorScheme";
+import { ColorScheme } from "../ColorScheme";
 
 function timestamp_string_to_date(timestamp) {
   //example timestamp string "10/31/2021, 10:49:35 AM 221ms"

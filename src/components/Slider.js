@@ -1,10 +1,16 @@
 import React from "react";
-import ColorScheme from "../ColorScheme";
+import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import "../assets/Slider.css";
-import RCSlider from "rc-slider";
-import "rc-slider/assets/index.css";
+import ReactRangeSlider from "./ReactRangeSlider";
 
 export default class Slider extends React.Component {
+  constructor(props) {
+    super(props);
+    this.slider_container_ref = React.createRef();
+  }
+
+  componentDidMount() {}
+
   textChangeHandler = (event) => {
     let val = event.target.value;
     const is_valid_number = /^-{0,1}\d+$/.test(val);
@@ -21,51 +27,92 @@ export default class Slider extends React.Component {
   };
 
   render() {
-    const progress_color = ColorScheme.get_color("blue");
-    const bg1 = ColorScheme.get_color("bg1");
+    const theme = this.context;
+    const progress_color = ColorScheme.get_color("blue", theme);
     const slider_height = 12;
-    const handle_radius = (slider_height * 5) / 6;
-    const main_border_radius = 9;
+    let background = null;
+    let input_style = null;
+    let handle_radius = null;
+    let main_border_radius = null;
+    let handle_style = {
+      cursor: "pointer",
+      position: "absolute",
+      top: "50%",
+      transform: "translate3d(-50%, -50%, 0)",
+    };
+    if (theme === THEME.TI) {
+      let gray = ColorScheme.get_color("gray", theme);
+      background = ColorScheme.get_color("bg0", theme);
+      handle_radius = 0;
+      main_border_radius = 0;
+      handle_style = {
+        width: slider_height * 2,
+        height: (slider_height * 3) / 2,
+        backgroundColor: progress_color,
+        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+        ...handle_style,
+      };
+      input_style = {
+        borderTop: `1px solid ${ColorScheme.get_color("red", THEME.TI)}`,
+        boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.25) ",
+        backgroundColor: background,
+        borderRadius: 0,
+        color: gray,
+        fontWeight: 600,
+      };
+    } else {
+      background = ColorScheme.get_color("bg1", theme);
+      handle_radius = (slider_height * 5) / 6;
+      main_border_radius = 9;
 
+      input_style = {
+        backgroundColor: background,
+        color: ColorScheme.get_color("white", theme),
+      };
+      handle_style = {
+        borderRadius: handle_radius,
+        width: handle_radius * 2,
+        height: handle_radius * 2,
+        backgroundColor: progress_color,
+        border: `1px solid ${background}`,
+        boxShadow: "none",
+        ...handle_style,
+      };
+    }
     const step = this.props.step || 1;
+
+    const fill_style = {
+      display: "block",
+      height: slider_height,
+      backgroundColor: progress_color,
+      borderRadius: main_border_radius,
+      position: "absolute",
+    };
+    const rail_style = {
+      borderRadius: main_border_radius,
+      height: slider_height,
+      position: "relative",
+      backgroundColor: background,
+      width: "60%",
+    };
+
     return (
-      <div className="slider_container">
-        <RCSlider
-          style={{
-            height: slider_height,
-            padding: 0,
-            width: "60%",
-          }}
-          railStyle={{
-            backgroundColor: bg1,
-            borderRadius: main_border_radius,
-            height: slider_height,
-          }}
-          trackStyle={{
-            backgroundColor: progress_color,
-            borderRadius: main_border_radius,
-            height: slider_height,
-          }}
-          handleStyle={{
-            borderRadius: handle_radius,
-            width: handle_radius * 2,
-            height: handle_radius * 2,
-            backgroundColor: progress_color,
-            border: `1px solid ${bg1}`,
-            boxShadow: "none",
-            // top: -(handle_radius - slider_height / 2),
-          }}
+      <div ref={this.slider_container_ref} className="slider_container">
+        <ReactRangeSlider
+          handle_style={handle_style}
+          tooltip={false}
+          fill_style={fill_style}
+          rail_style={rail_style}
           min={this.props.min}
           max={this.props.max}
           step={step}
           value={this.props.value}
           onChange={this.changeHandler}
-        ></RCSlider>
-
+        />
         <input
           className="slider_input"
           type="text"
-          style={{ backgroundColor: bg1 }}
+          style={input_style}
           spellCheck="false"
           value={String(this.props.value)}
           onChange={this.textChangeHandler}
@@ -74,3 +121,4 @@ export default class Slider extends React.Component {
     );
   }
 }
+Slider.contextType = ThemeContext;

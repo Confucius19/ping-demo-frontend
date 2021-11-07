@@ -1,30 +1,34 @@
-import React, { useState } from "react";
-import ColorScheme from "../ColorScheme";
+import React, { useState, useContext } from "react";
+import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import "../assets/PingSubmit.css";
 
 export default function PingSubmit(props) {
-  const blue = ColorScheme.get_color("blue");
-  let blue_25 = ColorScheme.get_color_with_opacity("blue", 0.25);
-  let blue_75 = ColorScheme.get_color_with_opacity("blue", 0.75);
-
   const [isHovering, setHoverState] = useState(false);
   const [isClicked, setClickState] = useState(false);
+  const theme = useContext(ThemeContext);
 
-  const submit_style = {
+  const blue = ColorScheme.get_color("blue", theme);
+  const blue_25 = ColorScheme.get_color_with_opacity("blue", 0.25, theme);
+  const blue_75 = ColorScheme.get_color_with_opacity("blue", 0.75, theme);
+  let submit_style = {
     backgroundColor: blue,
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
   };
-
-  const submit_hover_style = {
+  let submit_hover_style = {
     boxShadow: `0px 0px 11px 0px ${blue_25}`,
   };
-
-  const submit_click_style = {
+  let submit_click_style = {
     backgroundColor: blue_75,
   };
+  if (theme === THEME.TI) {
+    submit_style = {
+      borderRadius: 0,
+      ...submit_style,
+    };
+  }
 
   function mergeStyles(original, additions) {
     //adds and potential overwrites original styles with new styles

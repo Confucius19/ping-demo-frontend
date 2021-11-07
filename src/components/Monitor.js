@@ -3,7 +3,7 @@ import "../assets/Monitor.css";
 import log_icon from "../icons/log_icon.svg";
 import health_icon from "../icons/health_icon.svg";
 import delay_icon from "../icons/delay_icon.svg";
-import ColorScheme from "../ColorScheme";
+import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import PingLog from "./PingLog";
 import DelayMonitor from "./DelayMonitor";
 import Tile from "./Tile";
@@ -26,7 +26,6 @@ export default class Monitor extends React.Component {
   }
 
   render() {
-    console.log(this.props.pingbursts);
     let current_display = null;
     switch (this.state.monitor_state) {
       case MONITOR_STATE.DELAY:
@@ -37,7 +36,7 @@ export default class Monitor extends React.Component {
         break;
       case MONITOR_STATE.HEALTH:
         current_display = (
-          <Tile>
+          <Tile omit_header={true}>
             <div
               style={{
                 display: "flex",
@@ -59,13 +58,24 @@ export default class Monitor extends React.Component {
         );
     }
 
-    const bg0 = ColorScheme.get_color("bg0");
+    let monitor_tab_button_style = null;
+    const theme = this.context;
+    if (theme === THEME.TI) {
+      monitor_tab_button_style = {
+        backgroundColor: ColorScheme.get_color("gray", theme),
+      };
+    } else {
+      const bg0 = ColorScheme.get_color("bg0", theme);
+      monitor_tab_button_style = {
+        backgroundColor: bg0,
+      };
+    }
 
     return (
       <React.Fragment>
         <div className="monitor_tab_button_array">
           <button
-            style={{ backgroundColor: bg0 }}
+            style={monitor_tab_button_style}
             className="monitor_tab_button"
             onClick={() => {
               this.setState({ monitor_state: MONITOR_STATE.LOG });
@@ -74,7 +84,7 @@ export default class Monitor extends React.Component {
             <img src={log_icon} alt="log" />
           </button>
           <button
-            style={{ backgroundColor: bg0 }}
+            style={monitor_tab_button_style}
             className="monitor_tab_button"
             onClick={() => {
               this.setState({ monitor_state: MONITOR_STATE.HEALTH });
@@ -83,7 +93,7 @@ export default class Monitor extends React.Component {
             <img src={health_icon} alt="health" />
           </button>
           <button
-            style={{ backgroundColor: bg0 }}
+            style={monitor_tab_button_style}
             className="monitor_tab_button"
             onClick={() => {
               this.setState({ monitor_state: MONITOR_STATE.DELAY });
@@ -97,3 +107,4 @@ export default class Monitor extends React.Component {
     );
   }
 }
+Monitor.contextType = ThemeContext;
