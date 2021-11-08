@@ -31,12 +31,10 @@ export default class PingConfiguration extends React.Component {
       mode: "cors",
     };
     request_opts["body"] = JSON.stringify(pingburst_request);
-    fetch(new URL("pingbursts", document.ping_api_location), request_opts).then(
-      async (res) => {
-        //respons is id
-        // console.log(await res.json());
-      }
-    );
+    fetch(
+      new URL("pingbursts", document.ping_api_location),
+      request_opts
+    ).catch((err) => console.log(err));
     // console.log("Sent Pingburst!", pingburst_request);
   };
 

@@ -14,13 +14,15 @@ export default function ThemeToggle(props) {
     : undefined;
 
   let displayElement = null;
+  let slider_background = null;
   if (is_ti_themed) {
+    slider_background = ColorScheme.get_color("red_dark", theme);
     displayElement = (
       <>
         <img alt="day theme" src={day_icon}></img>
         <div
           style={{
-            backgroundColor: ColorScheme.get_color("gray", THEME.TI),
+            backgroundColor: ColorScheme.get_color("bg3", THEME.TI),
             width: 32,
             height: 32,
             borderRadius,
@@ -29,11 +31,13 @@ export default function ThemeToggle(props) {
       </>
     );
   } else {
+    slider_background = ColorScheme.get_color("bg1", theme);
+
     displayElement = (
       <>
         <div
           style={{
-            backgroundColor: ColorScheme.get_color("bg2", THEME.GRUVBOX),
+            backgroundColor: ColorScheme.get_color("bg2", theme),
             width: 32,
             height: 32,
             borderRadius,
@@ -49,8 +53,7 @@ export default function ThemeToggle(props) {
       style={{
         width: 64,
         height: 32,
-        backgroundColor: ColorScheme.get_color("bg1", theme),
-        marginRight: "5.9427vw",
+        backgroundColor: slider_background,
         borderRadius,
         display: "flex",
         cursor: "pointer",

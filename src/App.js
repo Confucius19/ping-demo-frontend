@@ -12,6 +12,7 @@ import IPAddressTable from "./components/IPAddressTable";
 import Topology from "./components/Topology";
 import produce from "immer";
 import ThemeToggle from "./components/ThemeToggle";
+import SettingsButton from "./components/SettingsButton";
 
 function nickname_generator() {
   const nicknames = [
@@ -61,6 +62,7 @@ export default class App extends React.Component {
       topology: { nodes: [], edges: [] },
       ip_address_info_array: [],
       pingbursts: [],
+      ping_api_location: "http://localhost:8000",
       theme: THEME.TI,
     };
 
@@ -73,10 +75,7 @@ export default class App extends React.Component {
       body.style[key] = app_fonts[key];
     }
 
-    //Sets API location
-    if (document.ping_api_location === undefined) {
-      document.ping_api_location = "http://localhost:8000";
-    }
+    document.ping_api_location = this.state.ping_api_location;
 
     //update pingbursts func
     setInterval(async () => {
@@ -150,6 +149,11 @@ export default class App extends React.Component {
     );
   };
 
+  change_ping_api_location_handler = (ping_api_location) => {
+    document.ping_api_location = ping_api_location;
+    this.setState({ ping_api_location });
+  };
+
   render() {
     let body = document.getElementsByTagName("body")[0];
     body.style.backgroundColor = ColorScheme.get_color("bg0", this.state.theme);
@@ -168,9 +172,22 @@ export default class App extends React.Component {
               style={dash_title_container_style}
             >
               <h1 className="dash_title">Your Wi-SUN Network</h1>
-              <ThemeToggle
-                handle_new_theme={(theme) => this.setState({ theme })}
-              />
+              <div
+                style={{
+                  marginRight: "5.9427vw",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <ThemeToggle
+                  handle_new_theme={(theme) => this.setState({ theme })}
+                />
+                <SettingsButton
+                  change_handler={this.change_ping_api_location_handler}
+                  {...this.state}
+                />
+              </div>
             </div>
             <div className="pane_container">
               <Pane>
