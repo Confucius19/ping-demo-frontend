@@ -5,6 +5,7 @@ import StatusIndicator from "./StatusIndicator";
 import { AnimatePresence, motion } from "framer-motion";
 import FlexTable from "./FlexTable";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
+import download_icon from "../icons/download_icon.svg";
 
 const duration_max_baseline = 600;
 
@@ -141,9 +142,22 @@ function PingBurstRow(props) {
 // }
 
 export default function PingLog(props) {
+  const download_url = new URL("Ping_Results.csv", document.ping_api_location);
+  const csv_download_button = (
+    // <a href={}>
+    <img
+      style={{
+        cursor: "pointer",
+      }}
+      alt="download"
+      onClick={() => window.open(download_url)}
+      src={download_icon}
+    ></img>
+    // </a>
+  );
   const table_format = [
     {
-      headerValue: "",
+      headerValue: csv_download_button,
       style: {
         flexBasis: "45px",
         flexGrow: "0",

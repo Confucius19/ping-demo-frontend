@@ -69,6 +69,7 @@ export default function SettingsButton(props) {
         onClick={() => set_hover_state(!is_hovering)}
         style={{
           marginLeft: 10,
+          cursor: "pointer",
         }}
         width="24"
         height="24"
