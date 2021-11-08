@@ -1,7 +1,7 @@
 import React from "react";
 import Tile from "./Tile";
 import * as d3 from "d3";
-import { ColorScheme } from "../ColorScheme";
+import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 
 function timestamp_string_to_date(timestamp) {
   //example timestamp string "10/31/2021, 10:49:35 AM 221ms"
@@ -19,184 +19,259 @@ function timestamp_string_to_date(timestamp) {
   return converted_date;
 }
 
-/**
- *  Input:
- *  All Pingbursts
- *  Destination ips to display
- *  Time interval e.g. the past hour
- *
- * Output:
- *  x : time
- *  y : Delay per node
- *
- */
-function LineChart(
-  series_array,
-  {
-    x = ([x]) => x, // given d in data, returns the (temporal) x-value
-    y = ([, y]) => y, // given d in data, returns the (quantitative) y-value
-    defined, // for gaps in data
-    curve = d3.curveBumpX, // method of interpolation between points
-    marginTop = 20, // top margin, in pixels
-    marginRight = 30, // right margin, in pixels
-    marginBottom = 30, // bottom margin, in pixels
-    marginLeft = 40, // left margin, in pixels
-    width = 640, // outer width, in pixels
-    height = 400, // outer height, in pixels
-    xType = d3.scaleTime, // the x-scale type
-    xDomain, // [xmin, xmax]
-    xRange = [marginLeft, width - marginRight], // [left, right]
-    yType = d3.scaleLinear, // the y-scale type
-    yDomain, // [ymin, ymax]
-    yRange = [height - marginBottom, marginTop], // [bottom, top]
-    color = "currentColor", // stroke color of line
-    strokeLinecap = "round", // stroke line cap of the line
-    strokeLinejoin = "round", // stroke line join of the line
-    strokeWidth = 1.5, // stroke width of line, in pixels
-    strokeOpacity = 1, // stroke opacity of line
-    yFormat, // a format specifier string for the y-axis
-    yLabel, // a label for the y-axis
-  } = {}
-) {
-  // Compute values.
-  // const X = d3.map(data, x);
-  // const Y = d3.map(data, y);
-  // const I = d3.map(data, (_, i) => i);
-  // if (defined === undefined) defined = (d, i) => !isNaN(X[i]) && !isNaN(Y[i]);
-  // const D = d3.map(data, defined);
-
-  // Compute default domains.
-  if (xDomain === undefined) {
-    const all_x_extents = series_array.map((series) =>
-      d3.extent(series.data, x)
-    );
-    const x_min = d3.min(all_x_extents, (extent) => extent[0]);
-    const x_max = d3.max(all_x_extents, (extent) => extent[1]);
-    xDomain = [x_min, x_max];
-  }
-  if (yDomain === undefined) {
-    const all_y_maxes = series_array.map((series) => d3.max(series.data, y));
-    const max = d3.max(all_y_maxes);
-    yDomain = [0, max];
-  }
-
-  // Construct scales and axes.
-  const xScale = xType(xDomain, xRange);
-  const yScale = yType(yDomain, yRange);
-  const xAxis = d3
-    .axisBottom(xScale)
-    .ticks(width / 80)
-    .tickSizeOuter(0);
-  const yAxis = d3.axisLeft(yScale).ticks(height / 40, yFormat);
-
-  // Construct a line generator.
-  const line = d3
-    .line()
-    .defined((datum) => y(datum) !== -1)
-    .curve(curve)
-    .x((datum) => xScale(x(datum)))
-    .y((datum) => yScale(y(datum)));
-
-  const svg = d3
-    .create("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .attr("viewBox", [0, 0, width, height])
-    .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
-
-  svg
-    .append("g")
-    .attr("transform", `translate(0,${height - marginBottom})`)
-    .call(xAxis);
-
-  svg
-    .append("g")
-    .attr("transform", `translate(${marginLeft},0)`)
-    .call(yAxis)
-    .call((g) => g.select(".domain").remove())
-    .call((g) =>
-      g
-        .selectAll(".tick line")
-        .clone()
-        .attr("x2", width - marginLeft - marginRight)
-        .attr("stroke-opacity", 0.1)
-    )
-    .call((g) =>
-      g
-        .append("text")
-        .attr("x", -marginLeft)
-        .attr("y", 10)
-        .attr("fill", "currentColor")
-        .attr("text-anchor", "start")
-        .text(yLabel)
-    );
-
-  // svg
-  //   .append("path")
-  //   .attr("fill", "none")
-  //   .attr("stroke", "currentColor")
-  //   .attr("d", line(I.filter((i) => D[i])));
-  for (let series of series_array) {
-    svg
-      .append("path")
-      .attr("fill", "none")
-      .attr("stroke", series.color)
-      .attr("stroke-width", strokeWidth)
-      .attr("stroke-linecap", strokeLinecap)
-      .attr("stroke-linejoin", strokeLinejoin)
-      .attr("stroke-opacity", strokeOpacity)
-      .attr("d", line(series.data));
-  }
-  return svg.node();
-}
-
-export default class DelayMonitor extends React.Component {
-  componentDidMount() {
-    function ip_series(pingbursts, dest_ip) {
-      const data = [];
-      for (let pingburst of pingbursts) {
-        const valid_pingburst =
-          pingburst.records.length !== 0 &&
-          pingburst.records[0].dest_ip === dest_ip;
-        if (!valid_pingburst) {
-          continue;
-        }
-        for (let record of pingburst.records) {
-          data.push({
-            start: timestamp_string_to_date(record.start),
-            duration: record.duration,
-          });
-        }
-      }
-      const color = ColorScheme.get_color("blue");
-      return { data, color, id: dest_ip };
+function ip_series(pingbursts, dest_ip, label, color) {
+  let data = [];
+  for (let pingburst of pingbursts) {
+    const valid_pingburst =
+      pingburst.records.length !== 0 &&
+      pingburst.records[0].dest_ip === dest_ip;
+    if (!valid_pingburst) {
+      continue;
     }
-    const series_array = [
-      ip_series(this.props.pingbursts, "2020::C"),
-      ip_series(this.props.pingbursts, "2020::10"),
-    ];
-    console.log(series_array);
-
-    const start = new Date();
-    start.setMinutes(start.getMinutes() - 10);
-    const finish = new Date();
-    const chart = LineChart(series_array, {
-      x: (datum) => datum.start,
-      y: (datum) => datum.duration,
-      xDomain: [start, finish],
-    });
-    this.chart = chart;
-    document.getElementById("delay_monitor_root").appendChild(chart);
+    for (let record of pingburst.records) {
+      data.push({
+        start: timestamp_string_to_date(record.start),
+        duration: record.duration,
+      });
+    }
   }
+  data = d3.sort(data, (datum) => datum.start);
+  return { data, color, id: dest_ip, label };
+}
+class NetworkDelayChart extends React.Component {
+  static contextType = ThemeContext;
 
+  state = {
+    series_paths: [],
+  };
+  aspect_ratio = 19 / 15;
+  viewportHeight = 401;
+  viewportWidth = this.aspect_ratio * this.viewportHeight;
+  margin = {
+    top: 50,
+    bottom: 50,
+    right: 80,
+    left: 80,
+  };
+  x_axis_ref = React.createRef();
+  y_axis_ref = React.createRef();
+  x_gridlines_ref = React.createRef();
+  y_gridlines_ref = React.createRef();
+  x_scale = d3
+    .scaleTime()
+    .range([this.margin.left, this.viewportWidth - this.margin.right]);
+  y_scale = d3
+    .scaleLinear()
+    .range([this.viewportHeight - this.margin.bottom, this.margin.top]);
+  x_axis = d3.axisBottom().scale(this.x_scale).ticks(d3.timeMinute.every(1));
+  x_gridlines = d3
+    .axisBottom()
+    .scale(this.x_scale)
+    .ticks(d3.timeMinute.every(1))
+    .tickSize(-this.viewportHeight + this.margin.top + this.margin.bottom, 0)
+    .tickFormat("");
+  y_axis = d3.axisLeft().scale(this.y_scale);
+  y_gridlines = d3
+    .axisLeft()
+    .scale(this.y_scale)
+    // .ticks(20)
+    .tickSize(-this.viewportWidth + this.margin.right + this.margin.left, 0)
+    .tickFormat("");
+  lineGenerator = d3
+    .line()
+    .x((datum) => this.x_scale(datum.start))
+    .y((datum) => this.y_scale(datum.duration))
+    .defined((datum) => datum.duration !== -1);
+
+  // .tickSizeOuter(0);
+  //   const yAxis = d3.axisLeft(yScale).ticks(height / 40, yFormat);
   componentDidUpdate() {
-    this.chart.selectAll();
+    d3.select(this.x_axis_ref.current).call(this.x_axis);
+    d3.select(this.y_axis_ref.current).call(this.y_axis);
+    d3.select(this.x_gridlines_ref.current).call(this.x_gridlines);
+    d3.select(this.y_gridlines_ref.current).call(this.y_gridlines);
+  }
+  componentDidMount() {
+    d3.select(this.x_gridlines_ref.current).call(this.x_gridlines);
+    d3.select(this.y_gridlines_ref.current).call(this.y_gridlines);
+    d3.select(this.x_axis_ref.current).call(this.x_axis);
+    d3.select(this.y_axis_ref.current).call(this.y_axis);
   }
 
   render() {
+    const theme = this.context;
+
+    let text_color = null;
+    let grid_color = null;
+    if (theme === THEME.TI) {
+      text_color = ColorScheme.get_color("gray", theme);
+      grid_color = ColorScheme.get_color_with_opacity("gray_light", 0.6, theme);
+    } else {
+      text_color = ColorScheme.get_color("white", theme);
+      grid_color = ColorScheme.get_color_with_opacity("gray", 0.6, theme);
+    }
+    let available_line_colors = ["blue", "green", "yellow", "orange"].map(
+      (color_name) => ColorScheme.get_color(color_name, theme)
+    );
+
+    const { pingbursts, ip_address_info_array } = this.props;
+    console.log(this.props);
+    const series_array = ip_address_info_array
+      .filter((info) => info.is_selected)
+      .map((info, index) => {
+        return ip_series(
+          pingbursts,
+          info.ip_address,
+          info.nickname,
+          available_line_colors[index % available_line_colors.length]
+        );
+      });
+
+    const start = new Date();
+    start.setMinutes(start.getMinutes() - 5);
+    const finish = new Date();
+
+    //cull_times
+    for (const series of series_array) {
+      series.data = series.data.filter(
+        (datum) => start < datum.start && datum.start < finish
+      );
+    }
+    //make domain
+    this.x_scale.domain([start, finish]);
+
+    const all_y_maxes = series_array.map((series) =>
+      d3.max(series.data, (datum) => datum.duration)
+    );
+    const max = d3.max(all_y_maxes);
+    this.y_scale.domain([0, max]);
+
+    const series_paths = series_array.map((series) => {
+      return {
+        ...series,
+        d_string: this.lineGenerator(series.data),
+      };
+    });
+
+    const lines = series_paths.map((path) => (
+      <path
+        fill="none"
+        key={path.id}
+        stroke={path.color}
+        d={path.d_string}
+      ></path>
+    ));
+
+    const legend_elements = series_paths.map((path, index) => {
+      const side = 14;
+      const spacing = side * 1.5;
+      return (
+        <g transform={`translate(5,${spacing * index})`}>
+          <rect fill={path.color} width={`${side}`} height={`${side}`}></rect>
+          <text
+            fill={text_color}
+            style={{ fontSize: 12 }}
+            textAnchor="start"
+            dx="20"
+            dy="12"
+          >
+            {path.label}
+          </text>
+        </g>
+      );
+    });
+
+    return (
+      <svg
+        style={{ width: "100%", color: text_color, overflow: "visible" }}
+        viewBox={`0 0 ${this.viewportWidth} ${this.viewportHeight}`}
+        preserveAspectRatio={"xMidYMid"}
+      >
+        {lines}
+        <g
+          ref={this.x_axis_ref}
+          transform={`translate(0, ${
+            this.viewportHeight - this.margin.bottom
+          })`}
+        />
+        <g
+          ref={this.x_gridlines_ref}
+          style={{ color: grid_color }}
+          transform={`translate(0, ${
+            this.viewportHeight - this.margin.bottom
+          })`}
+        />
+        <g
+          ref={this.y_gridlines_ref}
+          transform={`translate(${this.margin.left}, 0)`}
+          style={{ color: grid_color }}
+        />
+        <g
+          ref={this.y_axis_ref}
+          transform={`translate(${this.margin.left}, 0)`}
+        />
+        <g
+          transform={`translate(${this.margin.left / 3}, ${
+            (this.viewportHeight - this.margin.top - this.margin.bottom) / 2 +
+            this.margin.top
+          })`}
+        >
+          <g transform="rotate(-90)" textAnchor="middle">
+            <text fill={text_color}>Duration [ms]</text>
+          </g>
+        </g>
+
+        <g
+          textAnchor="middle"
+          transform={`translate(${
+            (this.viewportWidth - this.margin.left - this.margin.right) / 2 +
+            this.margin.left
+          },${this.viewportHeight})`}
+        >
+          <text fill={text_color}>Start Time</text>
+        </g>
+        <g
+          textAnchor="middle"
+          transform={`translate(${
+            (this.viewportWidth - this.margin.left - this.margin.right) / 2 +
+            this.margin.left
+          },${this.margin.top / 2})`}
+        >
+          <text
+            transform="scale(1.5,1.5)"
+            fill={text_color}
+            style={{ fontWeight: 600 }}
+          >
+            Node Delay vs. Time
+          </text>
+        </g>
+        <g
+          transform={`translate(${this.viewportWidth - this.margin.right},${
+            this.margin.top
+          })`}
+        >
+          {legend_elements}
+        </g>
+      </svg>
+    );
+  }
+}
+
+export default class DelayMonitor extends React.Component {
+  render() {
     return (
       <Tile omit_header={true}>
-        <div id="delay_monitor_root"></div>
+        <div
+          style={{
+            width: "90%",
+            marginTop: 20,
+            marginLeft: "auto",
+            marginRight: "auto",
+            marginBottom: 60,
+          }}
+        >
+          <NetworkDelayChart {...this.props} />
+        </div>
       </Tile>
     );
   }

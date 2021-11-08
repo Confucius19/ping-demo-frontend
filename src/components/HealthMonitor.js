@@ -42,10 +42,11 @@ export default function HealthMonitor(props) {
         pingburst["records"].map((records) => (records["was_success"] ? 1 : 0))
       ) * 100; //get the average of the current ping id
     const ip = pingburst["records"][0]["dest_ip"];
-    const nickname = get_ip_address_info_by_ip(
-      props.ip_address_info_array,
-      ip
-    ).nickname;
+    const ip_info = get_ip_address_info_by_ip(props.ip_address_info_array, ip);
+    if (!ip_info.is_selected) {
+      return;
+    }
+    const nickname = ip_info.nickname;
     const label = useNicknameOverIP ? nickname : ip;
     let ip_health_info = null;
     if (results_map.has(label)) {

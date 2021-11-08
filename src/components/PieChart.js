@@ -23,13 +23,10 @@ export default function PieChart(props) {
 
   const theme = useContext(ThemeContext);
   let text_color = null;
-  let grid_color = null;
   if (theme === THEME.TI) {
     text_color = ColorScheme.get_color("gray", theme);
-    grid_color = ColorScheme.get_color_with_opacity("gray_light", 0.6, theme);
   } else {
     text_color = ColorScheme.get_color("white", theme);
-    grid_color = ColorScheme.get_color_with_opacity("gray", 0.6, theme);
   }
 
   return (
