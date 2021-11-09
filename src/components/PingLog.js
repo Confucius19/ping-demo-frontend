@@ -142,7 +142,11 @@ function PingBurstRow(props) {
 // }
 
 export default function PingLog(props) {
-  const download_url = new URL("Ping_Results.csv", document.ping_api_location);
+  let download_url = '#'
+  try{
+  download_url = new URL("Ping_Results.csv", document.ping_api_location);
+  }catch{
+  }
   const csv_download_button = (
     // <a href={}>
     <img

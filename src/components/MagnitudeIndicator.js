@@ -21,7 +21,7 @@ export default function MagnitudeIndicator(props) {
   };
 
   //determine foreground color with threshold
-  const value = Math.min(1, props.value);
+  const value = Math.max(Math.min(1, props.value),0);
   let foreground_color;
   for (let threshold_val in thresholds) {
     foreground_color = thresholds[threshold_val];
@@ -47,7 +47,8 @@ export default function MagnitudeIndicator(props) {
     background_style[key] = props.style[key];
     foreground_style[key] = props.style[key];
   }
-  const width = (value * 0.9 + 0.15) * 100;
+  // const width = (value * 0.9 + 0.15) * 100;
+  const width = value *100;
   return (
     <>
       <div style={background_style} data-tip={props.tooltip || "N/A"}>
