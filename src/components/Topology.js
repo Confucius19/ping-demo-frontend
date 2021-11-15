@@ -99,12 +99,20 @@ export default class Topology extends React.Component {
         const ip_info = ip_info_array.find(
           (ip_info) => ip_info.ip_address === node.data.id
         );
+
+        //for whatever reason app will crash because it can merge node states together
+        //current solution --- obliterate the node state bc its not used here
+        const keys = Object.keys(node.data);
+        for (const key of keys) {
+          if (key !== "id") delete node.data[key];
+        }
         node.selected = ip_info.is_selected;
       }
     });
 
     return (
       <CytoscapeComponent
+        // diff={deepDiffMapper.map}
         elements={CytoscapeComponent.normalizeElements(unnormalized_elements)}
         cy={(cy) => {
           this.cy = cy;
