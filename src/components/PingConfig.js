@@ -82,18 +82,18 @@ export default class PingConfiguration extends React.Component {
     return (
       <div className="ping_form_container">
         <label style={labelStyle} className="ping_form_label">
-          Packet Size
+          Packet Size [bytes]
         </label>
         <Slider
           min={0}
           step={25}
-          max={100}
+          max={1000}
           name="packet_size"
           value={this.state.packet_size}
           value_change_handler={this.paramter_change_handler}
         />
         <label style={labelStyle} className="ping_form_label">
-          Timeout
+          Timeout [ms]
         </label>
         <Slider
           min={0}
@@ -104,7 +104,7 @@ export default class PingConfiguration extends React.Component {
           value_change_handler={this.paramter_change_handler}
         />
         <label style={labelStyle} className="ping_form_label">
-          Interval
+          Interval [ms]
         </label>
         <Slider
           min={0}
@@ -119,7 +119,7 @@ export default class PingConfiguration extends React.Component {
         </label>
         <Slider
           min={1}
-          max={30}
+          max={50}
           name="num_packets"
           value={this.state.num_packets}
           value_change_handler={this.paramter_change_handler}
