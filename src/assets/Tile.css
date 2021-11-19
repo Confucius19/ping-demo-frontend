@@ -3,6 +3,5 @@
    flex-direction: row;
    width: 100%;
    min-height: 350px;
-   border-radius: 10px;
    flex-grow: 1;
  }

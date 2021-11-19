@@ -1,257 +1,214 @@
-import React from "react";
-import ColorScheme from "../ColorScheme";
+import React, { useContext, useState } from "react";
 import "../assets/FlexTable.css";
-import toggle_icon from "../icons/toggle_icon.svg";
 import MagnitudeIndicator from "./MagnitudeIndicator";
 import StatusIndicator from "./StatusIndicator";
-import { Scrollbars } from "react-custom-scrollbars";
+import { AnimatePresence, motion } from "framer-motion";
+import FlexTable from "./FlexTable";
+import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
+import download_icon from "../icons/download_icon.svg";
 
-const row_height = 45;
-const divider_height = 2;
-
-// const example_table_data = [
-//   {
-//     id: 53,
-//     num_packets_requested: 10,
-//     records: [
-//       {
-//         source: "2020::A",
-//         destination: "2020::C",
-//         start: "10/22/2021, 4:00:19 PM 87ms",
-//         duration: 234,
-//         packet_size: 56,
-//         was_success: true,
-//       },
-//     ],
-//   },
-//   {
-//     id: 57,
-//     num_packets_requested: 10,
-//     records: [
-//       {
-//         source: "2020::A",
-//         destination: "2020::C",
-//         start: "10/21/2021, 4:01:19 PM 87ms",
-//         duration: 234,
-//         packet_size: 56,
-//         was_success: true,
-//       },
-//     ],
-//   },
-// ];
-
-// function getPingBurstsByIds(ids) {
-//   return ids.map((id) => example_table_data.find((ele) => ele.id === id));
-// }
+const duration_max_baseline = 600;
 
 function PingRow(props) {
   const start_matches = props.start.match(/(\d{1,2}:\d{1,2}:\d{1,2}.*M)/);
-  console.log(props.start);
   const start = start_matches[1];
   const ping_cols = [
     "", //toggle filler
     `n = ${props.index + 1}`,
     start,
-    props.duration,
+    <MagnitudeIndicator
+      value={props.duration / duration_max_baseline}
+      tooltip={`${props.duration.toFixed(2)}ms`}
+    />,
+
     <StatusIndicator is_good_status={props.was_success} />,
   ];
-
   return props.genRow(ping_cols);
 }
 
-class PingBurstRow extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      is_collapsed: true,
-    };
+function PingBurstRow(props) {
+  const [is_collapsed, setCollapse] = useState(true);
+  const theme = useContext(ThemeContext);
+  const records = props.records;
+  if (records.length === 0) {
+    const pingburst_cols = ["", props.id, "N/A", "N/A", "N/A"];
+    return props.genRow(pingburst_cols);
   }
+  const min_start = records[0].start;
+  const min_start_matches = min_start.match(
+    /(\d{1,2}\/\d{1,2}).*(\d{1,2}:\d{1,2}:\d{1,2}).*(.M)/
+  );
+  const min_start_str =
+    // min_start_matches[1] +
+    // " " +
+    min_start_matches[2] + " " + min_start_matches[3];
 
-  handle_collapse_toggle = (e) => {
-    this.setState((state) => {
-      return { is_collapsed: !state.is_collapsed };
-    });
+  const valid_duration_records = records.filter(
+    (record) => record.duration !== -1
+  );
+  const average_duration =
+    valid_duration_records.reduce(
+      (acc, cur) => (cur === -1 ? acc : acc + cur.duration),
+      0
+    ) / valid_duration_records.length;
+  const duration_indicator = (
+    <MagnitudeIndicator
+      value={average_duration / duration_max_baseline}
+      tooltip={`${average_duration.toFixed(2)}ms`}
+    />
+  );
+  const error_rate =
+    records.reduce((acc, record) => acc + (record.was_success ? 0 : 1), 0) /
+    records.length;
+  const error_rate_indicator = (
+    <MagnitudeIndicator
+      value={error_rate}
+      tooltip={`${error_rate.toFixed(2) * 100}%`}
+    />
+  );
+  const ping_rows = records.map((record, index) => (
+    <PingRow
+      key={record.start}
+      table_format={props.table_format}
+      index={index}
+      genRow={props.genRow}
+      {...record}
+    />
+  ));
+
+  const fill =
+    theme === THEME.TI
+      ? ColorScheme.get_color("gray", THEME.TI)
+      : ColorScheme.get_color("bg1", theme);
+  const toggle = (
+    <motion.svg
+      style={{ userSelect: "none", cursor: "pointer" }}
+      animate={{
+        rotate: is_collapsed ? 0 : 90,
+      }}
+      initial={false}
+      onClick={() => setCollapse(!is_collapsed)}
+      width="17"
+      height="19"
+      viewBox="0 0 17 19"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M16.1858 9.5L0.970119 18.5933L0.970119 0.406734L16.1858 9.5Z"
+        fill={fill}
+      />
+    </motion.svg>
+  );
+
+  const pingburst_cols = [
+    toggle,
+    props.id,
+    min_start_str,
+    duration_indicator,
+    error_rate_indicator,
+  ];
+
+  const ping_row_variants = {
+    collapsed: {
+      height: 0,
+    },
+    open: {
+      height: props.total_row_height * props.records.length,
+    },
   };
 
-  render() {
-    const records = this.props.records;
-    if (records.length === 0) {
-      const pingburst_cols = ["", this.props.id, "N/A", "N/A", "N/A"];
-      return this.props.genRow(pingburst_cols);
-    }
-    const min_start = records[0].start;
-    const min_start_matches = min_start.match(
-      /(\d{1,2}\/\d{1,2}).*(\d{1,2}:\d{1,2})/
-    );
-    const min_start_str = min_start_matches[1] + " " + min_start_matches[2];
-
-    const valid_duration_records = records.filter(
-      (record) => record.duration !== -1
-    );
-    const average_duration =
-      valid_duration_records.reduce(
-        (acc, cur) => (cur === -1 ? acc : acc + cur.duration),
-        0
-      ) / valid_duration_records.length;
-    const max_duration = 300;
-    const duration_indicator = (
-      <MagnitudeIndicator value={average_duration / max_duration} />
-    );
-    const error_rate =
-      records.reduce((acc, record) => acc + (record.was_success ? 0 : 1), 0) /
-      records.length;
-    const error_rate_indicator = <MagnitudeIndicator value={error_rate} />;
-    const ping_rows = records.map((record, index) => (
-      <PingRow
-        key={record.start}
-        table_format={this.props.table_format}
-        index={index}
-        genRow={this.props.genRow}
-        {...record}
-      />
-    ));
-
-    const toggle = this.state.is_collapsed ? (
-      <img
-        onClick={this.handle_collapse_toggle}
-        src={toggle_icon}
-        alt="Toggle Right"
-      />
-    ) : (
-      <img
-        onClick={this.handle_collapse_toggle}
-        src={toggle_icon}
-        alt="Toggle Down"
-      />
-    );
-
-    const pingburst_cols = [
-      toggle,
-      this.props.id,
-      min_start_str,
-      duration_indicator,
-      error_rate_indicator,
-    ];
-    return (
-      <React.Fragment>
-        {this.props.genRow(pingburst_cols)}
-        {!this.state.is_collapsed && ping_rows}
-      </React.Fragment>
-    );
-  }
+  return (
+    <React.Fragment>
+      {props.genRow(pingburst_cols)}
+      <AnimatePresence>
+        {!is_collapsed && (
+          <motion.div
+            variants={ping_row_variants}
+            style={{
+              overflow: "hidden",
+            }}
+            initial="collapsed"
+            animate="open"
+            exit="collapsed"
+          >
+            {ping_rows}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </React.Fragment>
+  );
 }
+// }
 
-export default class PingLog extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.table_format = [
-      {
-        headerValue: "",
-        style: {
-          flexBasis: "45px",
-          flexGrow: "0",
-        },
-      },
-      {
-        headerValue: "ID",
-        style: {
-          flexGrow: "1",
-        },
-      },
-      {
-        headerValue: "Start",
-        style: {
-          flexGrow: "1",
-        },
-      },
-
-      {
-        headerValue: "Duration (ms)",
-        style: {
-          flexGrow: "1",
-        },
-      },
-      {
-        headerValue: "Error Rate",
-        style: {
-          flexGrow: "1",
-        },
-      },
-    ];
-
-    this.table_headers = this.table_format.map((col_format) => {
-      return (
-        <div
-          key={Math.floor(Math.random() * 1000)}
-          className="flex_table_datum"
-          style={col_format.style}
-        >
-          {col_format.headerValue}
-        </div>
-      );
-    });
+export default function PingLog(props) {
+  let download_url = '#'
+  try{
+  download_url = new URL("Ping_Results.csv", document.ping_api_location);
+  }catch{
   }
-  render() {
-    const bg3 = ColorScheme.get_color("bg3");
-    const bg1 = ColorScheme.get_color("bg1");
-    const main_table_style = {
-      backgroundColor: ColorScheme.get_color("bg2"),
-      height: 8 * (row_height + divider_height) + row_height,
-    };
-    // const ids = [53, 53, 53, 53, 53, 53, 53, 53, 53, 57];
-    const generateBodyRow = (elements) => {
-      console.assert(elements.length === this.table_format.length);
-      const wrapped_elems = elements.map((ele, index) => {
-        let bodyRowStyle = this.table_format[index].style;
-        return (
-          <div className="flex_table_datum" style={bodyRowStyle} key={index}>
-            {ele}
-          </div>
-        );
-      });
-      const body_row_style = {
-        borderBottom: `${divider_height}px solid ${bg1}`,
-        height: row_height,
+  const csv_download_button = (
+    // <a href={}>
+    <img
+      style={{
+        cursor: "pointer",
+      }}
+      alt="download"
+      onClick={() => window.open(download_url)}
+      src={download_icon}
+    ></img>
+    // </a>
+  );
+  const table_format = [
+    {
+      headerValue: csv_download_button,
+      style: {
+        flexBasis: "45px",
+        flexGrow: "0",
+      },
+    },
+    {
+      headerValue: "ID",
+      style: {
+        flexGrow: "1",
+      },
+    },
+    {
+      headerValue: "Start",
+      style: {
+        flexGrow: "1",
+      },
+    },
+
+    {
+      headerValue: "Duration (ms)",
+      style: {
+        flexGrow: "1",
+      },
+    },
+    {
+      headerValue: "Error Rate",
+      style: {
+        flexGrow: "1",
+      },
+    },
+  ];
+
+  const table_rows = props.pingbursts
+    .slice()
+    .reverse()
+    .map((pingburst) => {
+      return {
+        id: pingburst.id,
+        ...pingburst,
       };
-      return (
-        <div style={body_row_style} className="flex_table_row">
-          {wrapped_elems}
-        </div>
-      );
-    };
+    });
 
-    // const ids = [53];
-    // const ids = [53, 53, 53, 53, 53, 53, 53, 53, 53, 53, 53, 53];
-    // const pingbursts = getPingBurstsByIds(ids);
-    const table_rows = this.props.pingbursts
-      .slice()
-      .reverse()
-      .map((pingburst) => {
-        return (
-          <PingBurstRow
-            key={pingburst.id}
-            {...pingburst}
-            genRow={generateBodyRow}
-          />
-        );
-      });
-    const scrollbar_style = {
-      width: "100%",
-      height: 8 * (row_height + divider_height),
-    };
-    return (
-      <div style={main_table_style} className="flex_table">
-        <div
-          style={{ backgroundColor: bg3, height: row_height }}
-          className="flex_table_row flex_table_header_row"
-        >
-          {this.table_headers}
-        </div>
-        <Scrollbars style={scrollbar_style}>
-          <div className="flex_table_body">{table_rows}</div>
-        </Scrollbars>
-      </div>
-    );
-  }
+  return (
+    <FlexTable
+      row_component={PingBurstRow}
+      table_format={table_format}
+      table_rows={table_rows}
+    />
+  );
 }

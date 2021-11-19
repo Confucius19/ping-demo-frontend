@@ -13,16 +13,16 @@
 }
 
 .arc_bar_bg{
-  stroke: var(--bg1);
+  /* stroke: var(--bg1); */
 }
 .arc_bar_fg{
-  stroke: var(--green);
-  --total : 210.487;
+  /* stroke: var(--green); */
+  /* --total : 210.487; */
   /* radius of half circle */
-  stroke-dasharray: var(--total);
+  /* stroke-dasharray: var(--total); */
   /* location of first dash */
-  --percent : 0.8;
-  stroke-dashoffset:calc(-1*var(--total)*(1 - var(--percent)));
+  /* --percent : 0.8; */
+  /* stroke-dashoffset:calc(-1*var(--total)*(1 - var(--percent))); */
 }
 
 .arc_bar_label_top{
