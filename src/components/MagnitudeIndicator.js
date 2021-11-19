@@ -21,7 +21,8 @@ export default class MagnitudeIndicator extends React.Component {
       width: "80%",
     };
 
-    const value = this.props.value;
+    let value = this.props.value;
+    value = Math.min(1,value);
     let foreground_color;
     for (let threshold_val in thresholds) {
       foreground_color = thresholds[threshold_val];

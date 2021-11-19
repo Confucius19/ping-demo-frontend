@@ -75,22 +75,37 @@ export default class App extends React.Component {
         return produce(state, (draft) => {
           //find diff of ip_addresses
           function calc_diff_ips(old_topology, new_topology) {
+            function difference(setA, setB) {
+              let _difference = new Set(setA);
+              for (let elem of setB) {
+                _difference.delete(elem);
+              }
+              return _difference;
+            }
             const old_ips = old_topology.nodes.reduce(
               (ip_set, node) => ip_set.add(node.data.id),
               new Set()
             );
-            const difference = [];
-            for (const node of new_topology.nodes) {
-              const current_ip = node.data.id;
-              if (!old_ips.has(current_ip)) {
-                difference.push(current_ip);
-              }
-            }
-            return difference;
+            const new_ips = new_topology.nodes.reduce(
+              (ip_set, node) => ip_set.add(node.data.id),
+              new Set()
+            );
+
+            let ips_to_add = difference(new_ips, old_ips);
+            let ips_to_remove = difference(old_ips, new_ips);
+            return {
+              ips_to_add,
+              ips_to_remove,
+            };
           }
-          const diff_ips = calc_diff_ips(draft.topology, topology);
+
+          const { ips_to_add, ips_to_remove } = calc_diff_ips(
+            draft.topology,
+            topology
+          );
+          let ips_to_add_array = [...ips_to_add];
           //Add new entries to ip_address_info_array
-          const diff_ip_address_info_array = diff_ips.map((ip_address) => {
+          const ip_address_info_to_add = ips_to_add_array.map((ip_address) => {
             const nickname = nickname_generator();
             return {
               is_selected: false,
@@ -99,7 +114,12 @@ export default class App extends React.Component {
               is_connected: true,
             };
           });
-          draft.ip_address_info_array.push(...diff_ip_address_info_array);
+
+          draft.ip_address_info_array.push(...ip_address_info_to_add);
+          draft.ip_address_info_array = draft.ip_address_info.filter(
+            (ip_info) => !ips_to_remove.has(ip_info.ip_address)
+          );
+
           draft.topology = topology;
           draft.pingbursts = pingbursts;
         });

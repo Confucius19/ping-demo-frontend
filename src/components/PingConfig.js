@@ -20,7 +20,7 @@ export default class PingConfiguration extends React.Component {
     for (const id of pc_ids) {
       pingburst_request[id] = this.state[id];
     }
-    pingburst_request["destination"] = destination_ip;
+    pingburst_request["dest_ip"] = destination_ip;
     const request_opts = {
       method: "POST",
       headers: {
