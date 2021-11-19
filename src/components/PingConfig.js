@@ -82,7 +82,7 @@ export default class PingConfiguration extends React.Component {
     return (
       <div className="ping_form_container">
         <label style={labelStyle} className="ping_form_label">
-          Packet Size [bytes]
+          Packet Size [B]
         </label>
         <Slider
           min={0}
