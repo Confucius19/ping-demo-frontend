@@ -115,7 +115,6 @@ class NetworkDelayChart extends React.Component {
     );
 
     const { pingbursts, ip_address_info_array } = this.props;
-    console.log(this.props);
     const series_array = ip_address_info_array
       .filter((info) => info.is_selected)
       .map((info, index) => {

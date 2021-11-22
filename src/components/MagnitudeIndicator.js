@@ -1,7 +1,8 @@
 import React, { useContext } from "react";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import { motion } from "framer-motion";
-import ReactTooltip from "react-tooltip";
+import "../assets/Tooltip.css";
+import Tooltip from "./Tooltip";
 
 export default function MagnitudeIndicator(props) {
   const theme = useContext(ThemeContext);
@@ -10,7 +11,10 @@ export default function MagnitudeIndicator(props) {
 
   const background_style = {
     height,
+    position: "relative",
     width: "80%",
+    marginLeft: "auto",
+    marginRight: "auto",
     overflow: "hidden",
   };
 
@@ -21,7 +25,7 @@ export default function MagnitudeIndicator(props) {
   };
 
   //determine foreground color with threshold
-  const value = Math.max(Math.min(1, props.value),0);
+  const value = Math.max(Math.min(1, props.value), 0);
   let foreground_color;
   for (let threshold_val in thresholds) {
     foreground_color = thresholds[threshold_val];
@@ -48,10 +52,13 @@ export default function MagnitudeIndicator(props) {
     foreground_style[key] = props.style[key];
   }
   // const width = (value * 0.9 + 0.15) * 100;
-  const width = value *100;
+  const width = value * 100;
   return (
-    <>
-      <div style={background_style} data-tip={props.tooltip || "N/A"}>
+    <Tooltip
+      style={{ width: "80%", left: "10%", right: 0 }}
+      content={props.tooltip || "N/A"}
+    >
+      <div style={background_style}>
         <motion.div
           animate={{ width }}
           transition={{ duration: 0.5 }}
@@ -59,7 +66,6 @@ export default function MagnitudeIndicator(props) {
           style={foreground_style}
         />
       </div>
-      <ReactTooltip effect="solid" place="bottom" delayHide={0} />
-    </>
+    </Tooltip>
   );
 }

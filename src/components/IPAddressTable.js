@@ -1,7 +1,8 @@
-import "../assets/FlexTable.css";
 import CheckBox from "./CheckBox";
 import StatusIndicator from "./StatusIndicator";
 import FlexTable from "./FlexTable";
+import "../assets/IPAddressTable.css";
+import Tooltip from "./Tooltip";
 
 // const example_ip_address_info_array = [
 //   {
@@ -30,18 +31,40 @@ import FlexTable from "./FlexTable";
 //   );
 // }
 
-function IPAddressRow(props) {
-  return props.genRow([
+function ipDataToElementsMapper(index, ip_table_rows, { columnWidths }) {
+  const ip_row = ip_table_rows[index];
+  const ip_address_max_width = columnWidths[1];
+  const ip_address_style = {
+    marginLeft: "auto",
+    marginRight: "auto",
+  };
+  if (ip_address_max_width !== -1) {
+    ip_address_style.width = ip_address_max_width - 30;
+  }
+  return [
     <CheckBox
       click_handler={(newVal) =>
-        props.ip_selection_handler(props.ip_address, newVal)
+        ip_row.ip_selection_handler(ip_row.ip_address, newVal)
       }
-      is_checked={props.is_selected}
+      is_checked={ip_row.is_selected}
     />,
-    props.ip_address,
-    props.nickname,
-    <StatusIndicator is_good_status={props.is_connected} />,
-  ]);
+    <Tooltip
+      content={ip_row.ip_address}
+      style={{
+        paddingLeft: 10,
+        paddingRight: 10,
+        height: 30,
+        // left: 0,
+        // right: 0,
+      }}
+    >
+      <div className="ip-address-table-ip-address" style={ip_address_style}>
+        {ip_row.ip_address}
+      </div>
+    </Tooltip>,
+    ip_row.nickname,
+    <StatusIndicator is_good_status={ip_row.is_connected} />,
+  ];
 }
 
 export default function IPAddressTable(props) {
@@ -100,11 +123,16 @@ export default function IPAddressTable(props) {
       ...ip_address_info,
     };
   });
-  return (
-    <FlexTable
-      row_component={IPAddressRow}
-      table_format={table_format}
-      table_rows={table_rows}
-    />
-  );
+
+  const tableProps = {
+    itemCount: table_rows.length,
+    rowKeyGenerator: (index, rows) => rows[index].id,
+    itemData: table_rows,
+    dataToElementsMapper: ipDataToElementsMapper,
+    table_format,
+    rowHeight: 50,
+    numVisibleRows: 5,
+  };
+
+  return <FlexTable {...tableProps} />;
 }

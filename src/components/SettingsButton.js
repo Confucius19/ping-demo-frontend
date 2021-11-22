@@ -90,7 +90,7 @@ export default function SettingsButton(props) {
         initial={false}
         animate={{
           opacity: is_hovering ? 1 : 0,
-          x: is_hovering ? 0 : 100,
+          x: 0,
         }}
         transition={{
           duration: 0.3,

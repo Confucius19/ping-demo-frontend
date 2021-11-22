@@ -7,12 +7,12 @@ import Tile, { TileHeader } from "./components/Tile";
 import PingConfig from "./components/PingConfig";
 import AtAGlance from "./components/AtAGlance";
 import Monitor from "./components/Monitor";
-import Scrollbars from "react-custom-scrollbars";
 import IPAddressTable from "./components/IPAddressTable";
 import Topology from "./components/Topology";
 import produce from "immer";
 import ThemeToggle from "./components/ThemeToggle";
 import SettingsButton from "./components/SettingsButton";
+import { compareObjects } from "./utils";
 
 function nickname_generator() {
   const nicknames = [
@@ -79,83 +79,104 @@ export default class App extends React.Component {
 
     //update pingbursts func
     setInterval(async () => {
-      let request_opts = {
-        method: "GET",
-        mode: "cors",
-      };
-      let pingburst_res, topology_res;
-      try {
-        pingburst_res = await fetch(
-          new URL("pingbursts", document.ping_api_location),
-          request_opts
-        );
-        topology_res = await fetch(
-          new URL("topology", document.ping_api_location),
-          request_opts
-        );
-        if (!pingburst_res.ok || !topology_res.ok) {
-          throw Error("[PING MODULE] : Received not ok response");
-        }
-      } catch (error) {
-        console.debug(error);
-        return;
-      }
-      const topology = await topology_res.json();
-      const pingbursts = await pingburst_res.json();
-      this.setState((state) => {
-        return produce(state, (draft) => {
-          //find diff of ip_addresses
-          function calc_diff_ips(old_topology, new_topology) {
-            function difference(setA, setB) {
-              let _difference = new Set(setA);
-              for (let elem of setB) {
-                _difference.delete(elem);
-              }
-              return _difference;
-            }
-            const old_ips = old_topology.nodes.reduce(
-              (ip_set, node) => ip_set.add(node.data.id),
-              new Set()
-            );
-            const new_ips = new_topology.nodes.reduce(
-              (ip_set, node) => ip_set.add(node.data.id),
-              new Set()
-            );
-
-            let ips_to_add = difference(new_ips, old_ips);
-            let ips_to_remove = difference(old_ips, new_ips);
-            return {
-              ips_to_add,
-              ips_to_remove,
-            };
-          }
-
-          const { ips_to_add, ips_to_remove } = calc_diff_ips(
-            draft.topology,
-            topology
-          );
-          let ips_to_add_array = [...ips_to_add];
-          //Add new entries to ip_address_info_array
-          const ip_address_info_to_add = ips_to_add_array.map((ip_address) => {
-            const nickname = nickname_generator();
-            return {
-              is_selected: false,
-              ip_address,
-              nickname,
-              is_connected: true,
-            };
-          });
-
-          draft.ip_address_info_array.push(...ip_address_info_to_add);
-          draft.ip_address_info_array = draft.ip_address_info_array.filter(
-            (ip_info) => !ips_to_remove.has(ip_info.ip_address)
-          );
-
-          draft.topology = topology;
-          draft.pingbursts = pingbursts;
-        });
-      });
+      this.update_pingbursts();
+      this.update_topology_and_ip_address_info_array();
     }, 1000);
+  }
+
+  async fetch_api_endpoint(endpoint) {
+    try {
+      let res = await fetch(new URL(endpoint, document.ping_api_location));
+      if (!res.ok) {
+        throw Error("[PING MODULE FETCH] : Received not ok response");
+      }
+      return await res.json();
+    } catch (error) {
+      console.debug(error);
+      return {};
+    }
+  }
+
+  async update_topology_and_ip_address_info_array() {
+    let new_topology = await this.fetch_api_endpoint("topology");
+    const areEqual = compareObjects(new_topology, this.state.topology);
+    if (areEqual) {
+      return;
+    }
+    this.setState((state) => {
+      return produce(state, (draft) => {
+        //find diff of ip_addresses
+        function calc_diff_ips(old_topology, new_topology) {
+          function difference(setA, setB) {
+            let _difference = new Set(setA);
+            for (let elem of setB) {
+              _difference.delete(elem);
+            }
+            return _difference;
+          }
+          const old_ips = old_topology.nodes.reduce(
+            (ip_set, node) => ip_set.add(node.data.id),
+            new Set()
+          );
+          const new_ips = new_topology.nodes.reduce(
+            (ip_set, node) => ip_set.add(node.data.id),
+            new Set()
+          );
+
+          let ips_to_add = difference(new_ips, old_ips);
+          let ips_to_remove = difference(old_ips, new_ips);
+          return {
+            ips_to_add,
+            ips_to_remove,
+          };
+        }
+
+        const { ips_to_add, ips_to_remove } = calc_diff_ips(
+          draft.topology,
+          new_topology
+        );
+        let ips_to_add_array = [...ips_to_add];
+        //Add new entries to ip_address_info_array
+        const ip_address_info_to_add = ips_to_add_array.map((ip_address) => {
+          const nickname = nickname_generator();
+          return {
+            is_selected: false,
+            ip_address,
+            nickname,
+            is_connected: true,
+          };
+        });
+
+        draft.ip_address_info_array.push(...ip_address_info_to_add);
+        draft.ip_address_info_array = draft.ip_address_info_array.filter(
+          (ip_info) => !ips_to_remove.has(ip_info.ip_address)
+        );
+
+        draft.topology = new_topology;
+      });
+    });
+  }
+
+  async update_pingbursts() {
+    let new_pingbursts = await this.fetch_api_endpoint("pingbursts");
+    const areEqual = compareObjects(new_pingbursts, this.state.pingbursts);
+    if (areEqual) {
+      return;
+    }
+    this.setState((prevState) => {
+      const newState = produce(prevState, (draft) => {
+        for (let new_pingburst of new_pingbursts) {
+          const alreadyExists = draft.pingbursts.find(
+            (burst) => burst.id === new_pingburst.id
+          );
+          if (!alreadyExists) {
+            draft.pingbursts.push(new_pingburst);
+          }
+        }
+      });
+      console.log(newState);
+      return newState;
+    });
   }
 
   ip_selection_handler = (ip, is_selected) => {
@@ -174,9 +195,23 @@ export default class App extends React.Component {
     this.setState({ ping_api_location });
   };
 
+  setScrollbarToCurrentTheme() {
+    let body = document.body;
+    if (this.state.theme === THEME.TI) {
+      body.style.setProperty("--scrollbar_bg", "rgba(0,0,0,0.1)");
+      body.style.setProperty("--thumb_bg", "rgba(0,0,0,0.4)");
+      body.style.setProperty("--thumb_bg_hover", "rgba(0,0,0,0.6)");
+    } else {
+      body.style.setProperty("--scrollbar_bg", ColorScheme.get_color("bg0"));
+      body.style.setProperty("--thumb_bg", ColorScheme.get_color("bg1"));
+      body.style.setProperty("--thumb_bg_hover", ColorScheme.get_color("bg2"));
+    }
+  }
+
   render() {
     let body = document.getElementsByTagName("body")[0];
     body.style.backgroundColor = ColorScheme.get_color("bg0", this.state.theme);
+    this.setScrollbarToCurrentTheme();
     const dash_title_container_style = {
       backgroundColor:
         this.state.theme === "ti"
@@ -185,71 +220,69 @@ export default class App extends React.Component {
     };
     return (
       <ThemeContext.Provider value={this.state.theme}>
-        <Scrollbars style={{ height: "100vh", width: "100vw" }}>
-          <div className="top_vstack">
+        <div className="top_vstack">
+          <div
+            className="dash_title_container"
+            style={dash_title_container_style}
+          >
+            <h1 className="dash_title">Your Wi-SUN Network</h1>
             <div
-              className="dash_title_container"
-              style={dash_title_container_style}
+              style={{
+                marginRight: "5.9427vw",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
             >
-              <h1 className="dash_title">Your Wi-SUN Network</h1>
-              <div
-                style={{
-                  marginRight: "5.9427vw",
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <ThemeToggle
-                  handle_new_theme={(theme) => this.setState({ theme })}
-                />
-                <SettingsButton
-                  change_handler={this.change_ping_api_location_handler}
-                  {...this.state}
+              <ThemeToggle
+                handle_new_theme={(theme) => this.setState({ theme })}
+              />
+              <SettingsButton
+                change_handler={this.change_ping_api_location_handler}
+                {...this.state}
+              />
+            </div>
+          </div>
+          <div className="pane_container">
+            <Pane>
+              <div className="tile_container_full tile_container_common">
+                <Tile title="Topology">
+                  <Topology
+                    ip_selection_handler={this.ip_selection_handler}
+                    ip_address_info_array={this.state.ip_address_info_array}
+                    elements={this.state.topology}
+                  />
+                </Tile>
+              </div>
+              <div className="tile_container_full tile_container_common">
+                <TileHeader title="IP Addresses" />
+                <IPAddressTable
+                  ip_selection_handler={this.ip_selection_handler}
+                  ip_address_info_array={this.state.ip_address_info_array}
                 />
               </div>
-            </div>
-            <div className="pane_container">
-              <Pane>
-                <div className="tile_container_full tile_container_common">
-                  <Tile title="Topology">
-                    <Topology
-                      ip_selection_handler={this.ip_selection_handler}
+            </Pane>
+            <Pane>
+              <div className="tile_container_hstack tile_container_common">
+                <div className="tile_container_half">
+                  <Tile title="Ping Config">
+                    <PingConfig
                       ip_address_info_array={this.state.ip_address_info_array}
-                      elements={this.state.topology}
                     />
                   </Tile>
                 </div>
-                <div className="tile_container_full tile_container_common">
-                  <TileHeader title="IP Addresses" />
-                  <IPAddressTable
-                    ip_selection_handler={this.ip_selection_handler}
-                    ip_address_info_array={this.state.ip_address_info_array}
-                  />
+                <div className="tile_container_half">
+                  <Tile title="At A Glance">
+                    <AtAGlance {...this.state} />
+                  </Tile>
                 </div>
-              </Pane>
-              <Pane>
-                <div className="tile_container_hstack tile_container_common">
-                  <div className="tile_container_half">
-                    <Tile title="Ping Config">
-                      <PingConfig
-                        ip_address_info_array={this.state.ip_address_info_array}
-                      />
-                    </Tile>
-                  </div>
-                  <div className="tile_container_half">
-                    <Tile title="At A Glance">
-                      <AtAGlance {...this.state} />
-                    </Tile>
-                  </div>
-                </div>
-                <div className="tile_container_full tile_container_common">
-                  <Monitor {...this.state} />
-                </div>
-              </Pane>
-            </div>
+              </div>
+              <div className="tile_container_full tile_container_common">
+                <Monitor {...this.state} />
+              </div>
+            </Pane>
           </div>
-        </Scrollbars>
+        </div>
       </ThemeContext.Provider>
     );
   }
