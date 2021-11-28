@@ -3,8 +3,21 @@ import reactDom from "react-dom";
 import "../assets/Tooltip.css";
 
 function TooltipPortal(props) {
+  const { top, left } = props.loc;
+  const style = {
+    transformOrigin: "center top",
+    transform: `translate(calc(-50% + ${left}px),${top}px)`,
+    height: 25,
+    paddingLeft: 10,
+    paddingRight: 10,
+    position: "absolute",
+    top: "0",
+    left: "0",
+  };
+  console.log(style);
+
   return reactDom.createPortal(
-    <div style={{ ...props.loc }} className="tooltip-text">
+    <div style={style} className="tooltip-text">
       {props.content || "N/A"}
     </div>,
     document.body
@@ -17,14 +30,19 @@ export default function Tooltip(props) {
   const [top, setTop] = useState(0);
   const [shown, setShown] = useState(false);
   useEffect(() => {
+    if (!shown) {
+      return;
+    }
     const boundingRect = localRef.current.getBoundingClientRect();
     const currentLeft = boundingRect.left;
     const currentTop = boundingRect.top + window.scrollY;
-    console.log(currentTop, top);
+    // console.log(currentTop, top);
     if (top !== currentTop) {
+      console.log("setState");
       setTop(currentTop);
     }
     if (left !== currentLeft) {
+      console.log(left, currentLeft);
       setLeft(currentLeft);
     }
   });
