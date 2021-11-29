@@ -10,17 +10,11 @@
  .slider_input {
    position: absolute;
    left: calc(85% + 5px);
-   font-family: inherit;
    width: 16%;
    font-size: 14px;
    font-weight: 500;
    color:  white;
    border: 0px;
    border-radius: 5px;
-   height: 26px;
-   text-align: center;
  }
- .slider_input:focus{
-  outline: 0px;
-}
 

@@ -14,7 +14,6 @@ function TooltipPortal(props) {
     top: "0",
     left: "0",
   };
-  console.log(style);
 
   return reactDom.createPortal(
     <div style={style} className="tooltip-text">
@@ -36,13 +35,10 @@ export default function Tooltip(props) {
     const boundingRect = localRef.current.getBoundingClientRect();
     const currentLeft = boundingRect.left;
     const currentTop = boundingRect.top + window.scrollY;
-    // console.log(currentTop, top);
     if (top !== currentTop) {
-      console.log("setState");
       setTop(currentTop);
     }
     if (left !== currentLeft) {
-      console.log(left, currentLeft);
       setLeft(currentLeft);
     }
   });

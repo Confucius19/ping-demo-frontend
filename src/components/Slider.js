@@ -2,6 +2,7 @@ import React from "react";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import "../assets/Slider.css";
 import ReactRangeSlider from "./ReactRangeSlider";
+import { ThemedInput } from "./ThemedInput";
 
 export default class Slider extends React.Component {
   constructor(props) {
@@ -31,7 +32,6 @@ export default class Slider extends React.Component {
     const progress_color = ColorScheme.get_color("blue", theme);
     const slider_height = 12;
     let background = null;
-    let input_style = null;
     let handle_radius = null;
     let main_border_radius = null;
     let handle_style = {
@@ -41,7 +41,6 @@ export default class Slider extends React.Component {
       transform: "translate3d(-50%, -50%, 0)",
     };
     if (theme === THEME.TI) {
-      let gray = ColorScheme.get_color("gray", theme);
       background = ColorScheme.get_color("bg0", theme);
       handle_radius = 0;
       main_border_radius = 0;
@@ -52,23 +51,10 @@ export default class Slider extends React.Component {
         boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
         ...handle_style,
       };
-      input_style = {
-        borderTop: `1px solid ${ColorScheme.get_color("red", THEME.TI)}`,
-        boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.25) ",
-        backgroundColor: background,
-        borderRadius: 0,
-        color: gray,
-        fontWeight: 600,
-      };
     } else {
       background = ColorScheme.get_color("bg1", theme);
       handle_radius = (slider_height * 5) / 6;
       main_border_radius = 9;
-
-      input_style = {
-        backgroundColor: background,
-        color: ColorScheme.get_color("white", theme),
-      };
       handle_style = {
         borderRadius: handle_radius,
         width: handle_radius * 2,
@@ -109,12 +95,9 @@ export default class Slider extends React.Component {
           value={this.props.value}
           onChange={this.changeHandler}
         />
-        <input
+        <ThemedInput
           className="slider_input"
-          type="text"
-          style={input_style}
-          spellCheck="false"
-          value={String(this.props.value)}
+          value={this.props.value}
           onChange={this.textChangeHandler}
         />
       </div>

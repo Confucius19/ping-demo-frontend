@@ -131,7 +131,7 @@ export default function IPAddressTable(props) {
     dataToElementsMapper: ipDataToElementsMapper,
     table_format,
     rowHeight: 50,
-    numVisibleRows: 5,
+    numVisibleRows: 8,
   };
 
   return <FlexTable {...tableProps} />;

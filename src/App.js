@@ -12,7 +12,7 @@ import Topology from "./components/Topology";
 import produce from "immer";
 import ThemeToggle from "./components/ThemeToggle";
 import SettingsButton from "./components/SettingsButton";
-import { compareObjects } from "./utils";
+import { compareObjects, mergeObjectsInPlace } from "./utils";
 import { PingJobsButton } from "./components/PingJobsButton";
 
 function nickname_generator() {
@@ -166,28 +166,7 @@ export default class App extends React.Component {
     }
     this.setState((prevState) => {
       const newState = produce(prevState, (draft) => {
-        for (let new_pingburst of new_pingbursts) {
-          const existing_pingburst_index = draft.pingbursts.findIndex(
-            (burst) => burst.id === new_pingburst.id
-          );
-          const existing_pingburst = draft.pingbursts[existing_pingburst_index];
-
-          if (existing_pingburst_index === -1) {
-            draft.pingbursts.push(new_pingburst);
-          } else {
-            if (
-              existing_pingburst.records.length >= new_pingburst.records.length
-            ) {
-              continue;
-            }
-            const newRecords = new_pingburst.records.slice(
-              prevState.pingbursts[existing_pingburst_index].records.length
-            );
-            draft.pingbursts[existing_pingburst_index].records.push(
-              ...newRecords
-            );
-          }
-        }
+        mergeObjectsInPlace(draft.pingbursts, new_pingbursts);
       });
       return newState;
     });

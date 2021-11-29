@@ -1,8 +1,51 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import Slider from "./Slider";
 import "../assets/PingConfig.css";
 import PingSubmit from "./PingSubmit";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
+import CheckBox from "./CheckBox";
+import { ThemedInput } from "./ThemedInput";
+import { useContext } from "react/cjs/react.development";
+
+function NumberOfPackets(props) {
+  const theme = useContext(ThemeContext);
+  const [isInfinite, setIsInfinite] = useState(false);
+  const lastKnownFiniteNumPackets = useRef(props.num_packets);
+  let fontSize = isInfinite ? 20 : 14;
+
+  const updateIsInfinite = (newVal) => {
+    setIsInfinite(newVal);
+    props.value_change_handler(
+      props.name,
+      newVal ? "∞" : String(lastKnownFiniteNumPackets.current)
+    );
+  };
+
+  const onChangeHandler = ({ target }) => {
+    if (isInfinite) {
+      return;
+    }
+    const newVal = target.value;
+    lastKnownFiniteNumPackets.current = newVal;
+    props.value_change_handler(props.name, newVal);
+  };
+  return (
+    <div className="num_packets_container">
+      <div>
+        <CheckBox
+          className={"is_infinite_checkbox ".concat(theme)}
+          is_checked={isInfinite}
+          click_handler={updateIsInfinite}
+        />
+      </div>
+      <ThemedInput
+        value={props.num_packets}
+        style={{ marginLeft: 10, width: "16%", fontSize }}
+        onChange={onChangeHandler}
+      />
+    </div>
+  );
+}
 
 export default class PingConfiguration extends React.Component {
   constructor(props) {
@@ -49,7 +92,7 @@ export default class PingConfiguration extends React.Component {
     });
   };
 
-  paramter_change_handler = (name, value) => {
+  parameter_change_handler = (name, value) => {
     this.setState((state) => {
       if (name === "interval" && value < state.timeout) {
         return {
@@ -90,7 +133,7 @@ export default class PingConfiguration extends React.Component {
           max={1000}
           name="packet_size"
           value={this.state.packet_size}
-          value_change_handler={this.paramter_change_handler}
+          value_change_handler={this.parameter_change_handler}
         />
         <label style={labelStyle} className="ping_form_label">
           Timeout [ms]
@@ -101,7 +144,7 @@ export default class PingConfiguration extends React.Component {
           max={9999}
           name="timeout"
           value={this.state.timeout}
-          value_change_handler={this.paramter_change_handler}
+          value_change_handler={this.parameter_change_handler}
         />
         <label style={labelStyle} className="ping_form_label">
           Interval [ms]
@@ -112,17 +155,15 @@ export default class PingConfiguration extends React.Component {
           max={9999}
           name="interval"
           value={this.state.interval}
-          value_change_handler={this.paramter_change_handler}
+          value_change_handler={this.parameter_change_handler}
         />
         <label style={labelStyle} className="ping_form_label">
           Number of Packets
         </label>
-        <Slider
-          min={1}
-          max={50}
+        <NumberOfPackets
           name="num_packets"
-          value={this.state.num_packets}
-          value_change_handler={this.paramter_change_handler}
+          value_change_handler={this.parameter_change_handler}
+          num_packets={this.state.num_packets}
         />
         <PingSubmit click_handler={this.click_handler} />
       </div>

@@ -28,7 +28,7 @@ export default function CheckBox(props) {
   return (
     <div
       style={bg_style}
-      className="checkbox_bg"
+      className={`${props.className} checkbox_bg`}
       onClick={(event) => {
         props.click_handler(!props.is_checked);
       }}

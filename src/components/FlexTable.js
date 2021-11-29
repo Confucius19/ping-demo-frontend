@@ -1,7 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import { FixedSizeList, areEqual } from "react-window";
-import { scrollbar_width } from "../utils.js";
+import {
+  scrollbarVisible as getScrollbarVisible,
+  scrollbar_width,
+} from "../utils.js";
 import produce from "immer";
 import "../assets/FlexTable.css";
 
@@ -19,7 +22,6 @@ class HeaderDatum extends React.Component {
       console.assert(entries.length === 1);
       const newWidth = entries[0].target.clientWidth;
       if (newWidth !== this.width) {
-        console.log(this.width, newWidth);
         this.props.widthCallback(newWidth);
         this.width = newWidth;
       }
@@ -127,13 +129,22 @@ export default function FlexTable(props) {
     );
   };
 
+  const [scrollbarVisible, setScrollbarVisible] = useState(false);
+  const outerRef = useRef(null);
+  useEffect(() => {
+    const newScrollbarVisible = getScrollbarVisible(outerRef.current);
+    if (newScrollbarVisible !== scrollbarVisible) {
+      setScrollbarVisible(newScrollbarVisible);
+    }
+  });
+
   return (
     <div>
       <div
         style={{
           borderTopLeftRadius: borderRadius,
           borderTopRightRadius: borderRadius,
-          paddingRight: scrollbar_width,
+          paddingRight: scrollbarVisible ? scrollbar_width : 0,
           color: header_fg_color,
           backgroundColor: header_bg_color,
           height: props.rowHeight,
@@ -143,6 +154,8 @@ export default function FlexTable(props) {
         {table_headers}
       </div>
       <FixedSizeList
+        outerRef={outerRef}
+        className={"flex_table ".concat(theme)}
         style={main_table_style}
         height={props.rowHeight * props.numVisibleRows}
         itemCount={props.itemCount}

@@ -23,6 +23,10 @@ function getScrollBarWidth() {
 
   return w1 - w2;
 }
+
+export function scrollbarVisible(element) {
+  return element.scrollHeight > element.clientHeight;
+}
 export const scrollbar_width = getScrollBarWidth();
 
 //https://stackoverflow.com/questions/13142968/deep-comparison-of-objects-arrays
@@ -59,4 +63,58 @@ export function compareObjects(o, p) {
   //     return false; //not the same value
   // }
   // return true;
+}
+
+export function mergeObjectsInPlace(target, source) {
+  console.assert(typeof target === typeof source);
+  //only mutate strings, numbers, booleans
+
+  if (target instanceof Array) {
+    //s -> t (modify)
+    const common_length = Math.min(target.length, source.length);
+    for (let i = 0; i < common_length; i++) {
+      mergeSubEntity(target, source, i);
+    }
+    //s -> t (add)
+    if (target.length < source.length) {
+      target.push(...source.slice(target.length));
+    } else if (source.length < target.length) {
+      //s -> t (remove)
+      target.splice(source.length, target.length - source.length);
+    }
+  } else if (typeof target === "object") {
+    //s -> t (modify)
+    for (const t_key in target) {
+      if (t_key in source && target[t_key] !== source[t_key]) {
+        mergeSubEntity(target, source, t_key);
+      }
+    }
+    //s -> t (add)
+    const new_s_keys = Object.keys(source).filter(
+      (s_key) => !(s_key in target)
+    );
+    new_s_keys.forEach((s_key) => {
+      target[s_key] = source[s_key];
+    });
+    //s -> t (remove)
+    const t_keys_to_remove = Object.keys(target)
+    .filter((t_key) => !(t_key in source));
+    t_keys_to_remove.forEach((t_key) => {
+      delete target[t_key];
+    });
+  }
+
+  function mergeSubEntity(target, source, key) {
+    const s_val = source[key];
+    const s_val_type = typeof s_val;
+    if (
+      s_val_type === "string" ||
+      s_val_type === "number" ||
+      s_val_type === "boolean"
+    ) {
+      target[key] = s_val;
+    } else {
+      mergeObjectsInPlace(target[key], s_val);
+    }
+  }
 }
