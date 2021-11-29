@@ -13,6 +13,7 @@ import produce from "immer";
 import ThemeToggle from "./components/ThemeToggle";
 import SettingsButton from "./components/SettingsButton";
 import { compareObjects } from "./utils";
+import { PingJobsButton } from "./components/PingJobsButton";
 
 function nickname_generator() {
   const nicknames = [
@@ -166,15 +167,28 @@ export default class App extends React.Component {
     this.setState((prevState) => {
       const newState = produce(prevState, (draft) => {
         for (let new_pingburst of new_pingbursts) {
-          const alreadyExists = draft.pingbursts.find(
+          const existing_pingburst_index = draft.pingbursts.findIndex(
             (burst) => burst.id === new_pingburst.id
           );
-          if (!alreadyExists) {
+          const existing_pingburst = draft.pingbursts[existing_pingburst_index];
+
+          if (existing_pingburst_index === -1) {
             draft.pingbursts.push(new_pingburst);
+          } else {
+            if (
+              existing_pingburst.records.length >= new_pingburst.records.length
+            ) {
+              continue;
+            }
+            const newRecords = new_pingburst.records.slice(
+              prevState.pingbursts[existing_pingburst_index].records.length
+            );
+            draft.pingbursts[existing_pingburst_index].records.push(
+              ...newRecords
+            );
           }
         }
       });
-      console.log(newState);
       return newState;
     });
   }
@@ -195,6 +209,13 @@ export default class App extends React.Component {
     this.setState({ ping_api_location });
   };
 
+  setColorSchemeToCSSVars() {
+    const cmap = ColorScheme.color_maps[this.state.theme];
+    for (let color in cmap) {
+      document.body.style.setProperty(`--${color}`, cmap[color]);
+    }
+  }
+
   setScrollbarToCurrentTheme() {
     let body = document.body;
     if (this.state.theme === THEME.TI) {
@@ -212,6 +233,7 @@ export default class App extends React.Component {
     let body = document.getElementsByTagName("body")[0];
     body.style.backgroundColor = ColorScheme.get_color("bg0", this.state.theme);
     this.setScrollbarToCurrentTheme();
+    this.setColorSchemeToCSSVars();
     const dash_title_container_style = {
       backgroundColor:
         this.state.theme === "ti"
@@ -237,6 +259,7 @@ export default class App extends React.Component {
               <ThemeToggle
                 handle_new_theme={(theme) => this.setState({ theme })}
               />
+              <PingJobsButton {...this.state} />
               <SettingsButton
                 change_handler={this.change_ping_api_location_handler}
                 {...this.state}
