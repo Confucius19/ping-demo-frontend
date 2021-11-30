@@ -80,7 +80,7 @@ export default function BarChart(props) {
                 align: "center",
                 font: {
                   size: 18,
-                  weight: "600",
+                  weight: "400",
                   family: "Raleway",
                 },
               },
