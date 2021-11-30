@@ -29,6 +29,7 @@
     "build": "npx run-script-os",
     "build:linux": "export SET NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
     "build:windows": "react-scripts build",
+    "build:dev": "dotenv -e .env.development react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -51,5 +52,8 @@
     ]
   },
   "proxy": "http://localhost:8000",
-  "homepage": "."
+  "homepage": ".",
+  "devDependencies": {
+    "dotenv": "^10.0.0"
+  }
 }

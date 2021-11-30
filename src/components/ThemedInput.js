@@ -1,4 +1,4 @@
-import { useContext } from "react/cjs/react.development";
+import { useContext } from "react";
 import "../assets/ThemedInput.css";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 

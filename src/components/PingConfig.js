@@ -5,7 +5,7 @@ import PingSubmit from "./PingSubmit";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 import CheckBox from "./CheckBox";
 import { ThemedInput } from "./ThemedInput";
-import { useContext } from "react/cjs/react.development";
+import { useContext } from "react";
 
 function NumberOfPackets(props) {
   const theme = useContext(ThemeContext);

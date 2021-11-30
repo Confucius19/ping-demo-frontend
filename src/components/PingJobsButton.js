@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import "../assets/PingJobsButton.css";
 import { PingJobMonitor } from "./PingJobMonitor";
-import { useContext } from "react/cjs/react.development";
+import { useContext } from "react";
 import { ColorScheme, THEME, ThemeContext } from "../ColorScheme";
 
 export function PingJobsButton(props) {
