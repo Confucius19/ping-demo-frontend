@@ -4,6 +4,7 @@ import PieChart from "./PieChart";
 import { get_ip_address_info_by_ip } from "../App";
 import { useContext } from "react";
 import { ColorScheme, ThemeContext } from "../ColorScheme";
+import ErrorRateLineChart from "./ErrorRateLineChart";
 
 // the values of the enum will be labels of graphs
 export const HEALTH_CATEGORY = {
@@ -104,6 +105,7 @@ export default function HealthMonitor(props) {
           gap: 50,
         }}
       >
+        <ErrorRateLineChart {...props} />
         <BarChart
           results_map={results_map}
           category_color_map={category_color_map}

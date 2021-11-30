@@ -15,7 +15,7 @@ import SettingsButton from "./components/SettingsButton";
 import { compareObjects, mergeObjectsInPlace } from "./utils";
 import { PingJobsButton } from "./components/PingJobsButton";
 
-function nickname_generator() {
+function nickname_generator(seed) {
   const nicknames = [
     "Alfa",
     "Bravo",
@@ -44,7 +44,8 @@ function nickname_generator() {
     "Yankee",
     "Zulu",
   ];
-  const index = Math.floor(Math.random() * nicknames.length);
+  // const index = Math.floor(Math.random() * nicknames.length);
+  const index = seed % nicknames.length;
   return nicknames[index];
 }
 
@@ -138,15 +139,17 @@ export default class App extends React.Component {
         );
         let ips_to_add_array = [...ips_to_add];
         //Add new entries to ip_address_info_array
-        const ip_address_info_to_add = ips_to_add_array.map((ip_address) => {
-          const nickname = nickname_generator();
-          return {
-            is_selected: false,
-            ip_address,
-            nickname,
-            is_connected: true,
-          };
-        });
+        const ip_address_info_to_add = ips_to_add_array.map(
+          (ip_address, index) => {
+            const nickname = nickname_generator(index);
+            return {
+              is_selected: false,
+              ip_address,
+              nickname,
+              is_connected: true,
+            };
+          }
+        );
 
         draft.ip_address_info_array.push(...ip_address_info_to_add);
         draft.ip_address_info_array = draft.ip_address_info_array.filter(

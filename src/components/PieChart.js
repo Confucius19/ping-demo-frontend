@@ -55,6 +55,12 @@ export default function PieChart(props) {
               display: true,
               text: "Average Success Rate of Network Nodes",
               color: text_color,
+              align: "center",
+              font: {
+                size: 24,
+                weight: "600",
+                family: "Raleway",
+              },
             },
             legend: {
               labels: {

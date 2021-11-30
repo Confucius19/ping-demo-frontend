@@ -3,6 +3,8 @@ import MagnitudeIndicator from "./MagnitudeIndicator";
 import download_icon from "../icons/download_icon.svg";
 import { get_ip_address_info_by_ip } from "../App";
 import FlexTable from "./FlexTable";
+import { sort } from "d3-array";
+import { timestamp_string_to_date } from "../utils";
 const duration_max_baseline = 600;
 
 function pingDataToElementsMapper(index, data) {
@@ -88,9 +90,15 @@ export default function PingLog(props) {
 
   props.pingbursts.forEach((burst) => {
     burst.records.forEach((record) => {
-      row_data.records.push({ ...record, burst_id: burst.id });
+      row_data.records.push({
+        ...record,
+        burst_id: burst.id,
+        startDate: timestamp_string_to_date(record.start),
+      });
     });
   });
+  // the startDate is minus in order to sort form latest -> oldest
+  row_data.records = sort(row_data.records, (datum) => -datum.startDate);
 
   const tableProps = {
     itemCount: row_data.records.length,

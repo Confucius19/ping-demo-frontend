@@ -97,8 +97,9 @@ export function mergeObjectsInPlace(target, source) {
       target[s_key] = source[s_key];
     });
     //s -> t (remove)
-    const t_keys_to_remove = Object.keys(target)
-    .filter((t_key) => !(t_key in source));
+    const t_keys_to_remove = Object.keys(target).filter(
+      (t_key) => !(t_key in source)
+    );
     t_keys_to_remove.forEach((t_key) => {
       delete target[t_key];
     });
@@ -117,4 +118,20 @@ export function mergeObjectsInPlace(target, source) {
       mergeObjectsInPlace(target[key], s_val);
     }
   }
+}
+
+export function timestamp_string_to_date(timestamp) {
+  //example timestamp string "10/31/2021, 10:49:35 AM 221ms"
+  const date_regex_matches = timestamp.match(/(.*) (\d{1,3})ms/);
+  //index 0 is the entire timestamp string
+  //index 1 is date time w/o ms
+  // index 2 is ms
+  if (date_regex_matches.length < 3) {
+    console.error("Could not convert timesatm string: ", timestamp);
+  }
+  const date_without_ms = date_regex_matches[1];
+  const ms = parseInt(date_regex_matches[2]);
+  const converted_date = new Date(date_without_ms);
+  converted_date.setMilliseconds(ms);
+  return converted_date;
 }

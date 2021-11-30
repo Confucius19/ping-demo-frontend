@@ -19,6 +19,10 @@ function timestamp_string_to_date(timestamp) {
   return converted_date;
 }
 
+function average(array) {
+  return array.reduce((acc, cur) => acc + cur, 0) / array.length;
+}
+
 function ip_series(pingbursts, dest_ip, label, color) {
   let data = [];
   for (let pingburst of pingbursts) {
@@ -31,14 +35,34 @@ function ip_series(pingbursts, dest_ip, label, color) {
     for (let record of pingburst.records) {
       data.push({
         start: timestamp_string_to_date(record.start),
-        duration: record.duration,
+        was_success: record.was_success,
       });
     }
   }
   data = d3.sort(data, (datum) => datum.start);
+  let cumulative_average = null;
+  function datumWasSuccessNum(datum) {
+    return datum.was_success ? 1 : 0;
+  }
+
+  const NUM_PREVIOUS = 8; //for moving point average
+  data.forEach((datum, index) => {
+    const lowerBound = Math.max(0, index - NUM_PREVIOUS); //inclusive
+    const upperBound = index + 1; //noninclusive
+    datum["movingAverage"] = average(
+      Array.from(data.slice(lowerBound, upperBound), datumWasSuccessNum)
+    );
+    if (cumulative_average === null) {
+      cumulative_average = datumWasSuccessNum(datum);
+    } else {
+      cumulative_average =
+        (cumulative_average * index + datumWasSuccessNum(datum)) / (index + 1);
+    }
+    datum["cumulativeAverage"] = cumulative_average;
+  });
   return { data, color, id: dest_ip, label };
 }
-class NetworkDelayChart extends React.Component {
+export default class ErrorRateLineChart extends React.Component {
   static contextType = ThemeContext;
 
   state = {
@@ -77,21 +101,27 @@ class NetworkDelayChart extends React.Component {
     // .ticks(20)
     .tickSize(-this.viewportWidth + this.margin.right + this.margin.left, 0)
     .tickFormat("");
-  lineGenerator = d3
+  movingAveragelineGenerator = d3
+    .line()
+    .curve(d3.curveBumpX)
+    .x((datum) => this.x_scale(datum.start))
+    .y((datum) => this.y_scale(datum.movingAverage));
+  cumulativeAveragelineGenerator = d3
     .line()
     .x((datum) => this.x_scale(datum.start))
-    .y((datum) => this.y_scale(datum.duration))
-    .defined((datum) => datum.duration !== -1);
+    .y((datum) => this.y_scale(datum.cumulativeAverage));
 
   // .tickSizeOuter(0);
   //   const yAxis = d3.axisLeft(yScale).ticks(height / 40, yFormat);
   componentDidUpdate() {
+    this.y_scale.domain([0, 100]);
     d3.select(this.x_axis_ref.current).call(this.x_axis);
     d3.select(this.y_axis_ref.current).call(this.y_axis);
     d3.select(this.x_gridlines_ref.current).call(this.x_gridlines);
     d3.select(this.y_gridlines_ref.current).call(this.y_gridlines);
   }
   componentDidMount() {
+    this.y_scale.domain([0, 100]);
     d3.select(this.x_gridlines_ref.current).call(this.x_gridlines);
     d3.select(this.y_gridlines_ref.current).call(this.y_gridlines);
     d3.select(this.x_axis_ref.current).call(this.x_axis);
@@ -138,29 +168,35 @@ class NetworkDelayChart extends React.Component {
     }
     //make domain
     this.x_scale.domain([start, finish]);
-
-    const all_y_maxes = series_array.map((series) =>
-      d3.max(series.data, (datum) => datum.duration)
-    );
-    const max = d3.max(all_y_maxes);
-    this.y_scale.domain([0, max]);
-
+    this.y_scale.domain([0, 1]);
     const series_paths = series_array.map((series) => {
       return {
         ...series,
-        d_string: this.lineGenerator(series.data),
+        cum_ave_d_string: this.movingAveragelineGenerator(series.data),
+        mov_ave_d_string: this.cumulativeAveragelineGenerator(series.data),
       };
     });
+    console.log(series_paths);
 
-    const lines = series_paths.map((path) => (
-      <path
-        fill="none"
-        key={path.id}
-        stroke={path.color}
-        strokeWidth="2"
-        d={path.d_string}
-      ></path>
-    ));
+    const lines = series_paths.map((path) => {
+      return (
+        // <g key={path.id}>
+        <>
+          <path
+            fill="none"
+            stroke={path.color}
+            d={path.cum_ave_d_string}
+            strokeWidth="3"
+          ></path>
+          <path
+            fill="none"
+            stroke={path.color}
+            strokeDasharray="3"
+            d={path.mov_ave_d_string}
+          ></path>
+        </>
+      );
+    });
 
     const legend_elements = series_paths.map((path, index) => {
       const side = 14;
@@ -217,7 +253,7 @@ class NetworkDelayChart extends React.Component {
           })`}
         >
           <g transform="rotate(-90)" textAnchor="middle">
-            <text fill={text_color}>Duration [ms]</text>
+            <text fill={text_color}>Success Rate %</text>
           </g>
         </g>
 
@@ -242,7 +278,7 @@ class NetworkDelayChart extends React.Component {
             fill={text_color}
             style={{ fontWeight: 600 }}
           >
-            Node Delay vs. Time
+            Success Rate vs. Time
           </text>
         </g>
         <g
@@ -253,26 +289,6 @@ class NetworkDelayChart extends React.Component {
           {legend_elements}
         </g>
       </svg>
-    );
-  }
-}
-
-export default class DelayMonitor extends React.Component {
-  render() {
-    return (
-      <Tile omit_header={true}>
-        <div
-          style={{
-            width: "90%",
-            marginTop: 20,
-            marginLeft: "auto",
-            marginRight: "auto",
-            marginBottom: 60,
-          }}
-        >
-          <NetworkDelayChart {...this.props} />
-        </div>
-      </Tile>
     );
   }
 }

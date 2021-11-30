@@ -50,6 +50,12 @@ export default function BarChart(props) {
               display: true,
               text: "Average Success Rate per Network Node",
               color: text_color,
+              align: "center",
+              font: {
+                size: 24,
+                weight: "600",
+                family: "Raleway",
+              },
             },
 
             legend: {
@@ -71,11 +77,21 @@ export default function BarChart(props) {
                 display: true,
                 text: "Percent Success",
                 color: text_color,
+                align: "center",
+                font: {
+                  size: 18,
+                  weight: "600",
+                  family: "Raleway",
+                },
               },
             },
             x: {
               ticks: {
                 color: text_color,
+                font: {
+                  weight: "600",
+                  family: "Raleway",
+                },
               },
               grid: {
                 color: grid_color,
