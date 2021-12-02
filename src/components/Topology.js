@@ -93,15 +93,16 @@ export default class Topology extends React.Component {
 
   render() {
     const ip_info_array = this.props.ip_address_info_array;
-    const unnormalized_elements = produce(this.props.elements, (elements) => {
-      const nodes = elements.nodes;
-      for (const node of nodes) {
-        const ip_info = ip_info_array.find(
-          (ip_info) => ip_info.ip_address === node.data.id
-        );
-        node.selected = ip_info.is_selected;
-      }
+    const unnormalized_nodes = this.props.elements.nodes.map((node) => {
+      const ip_info = ip_info_array.find(
+        (ip_info) => ip_info.ip_address === node.data.id
+      );
+      return { data: { selected: ip_info.is_selected, id: node.data.id } };
     });
+    const unnormalized_elements = {
+      nodes: unnormalized_nodes,
+      edges: this.props.elements.edges,
+    };
 
     return (
       <CytoscapeComponent

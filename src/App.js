@@ -68,6 +68,8 @@ export default class App extends React.Component {
       theme: THEME.TI,
     };
 
+    this.unique_ips_seen = 0;
+
     let body = document.getElementsByTagName("body")[0];
     body.style.backgroundColor = ColorScheme.get_color("bg0", this.state.theme);
     body.style.boxSizing = "border-box";
@@ -141,7 +143,7 @@ export default class App extends React.Component {
         //Add new entries to ip_address_info_array
         const ip_address_info_to_add = ips_to_add_array.map(
           (ip_address, index) => {
-            const nickname = nickname_generator(index);
+            const nickname = nickname_generator(this.unique_ips_seen + index);
             return {
               is_selected: false,
               ip_address,
@@ -150,6 +152,7 @@ export default class App extends React.Component {
             };
           }
         );
+        this.unique_ips_seen += ips_to_add_array.length;
 
         draft.ip_address_info_array.push(...ip_address_info_to_add);
         draft.ip_address_info_array = draft.ip_address_info_array.filter(
